@@ -17,7 +17,7 @@ Local files are mounted into the container using the 'volumes' directive in the 
 
 #### Visit phphmyadmin at:
 
-http://localhost:8081/
+http://localhost:8082/
 
 #### Visit your express app at:
 
