@@ -12,7 +12,7 @@ Local files are mounted into the container using the 'volumes' directive in the 
 
 ### Super-quickstart your new project:
 
-* Make sure that you don't have any other containers running usind docker ps
+* Make sure that you don't have any other containers running usind dockers ps
 * run ```docker-compose up --build```
 
 #### Visit phphmyadmin at:
