@@ -1,59 +1,167 @@
-# MySQL, PHPMyAdmin and Node.js (ready for Express development)
+Ride Sharing to University
+This is a university ride-sharing platform designed to help students connect and share rides efficiently, reducing transportation costs and allowing sustainability to lower students transportation cost and save time.
 
-This will install Mysql and phpmyadmin (including all dependencies to run Phpmyadmin) AND node.js
+Project Overview
+Many university students face challenges with transportation mostly, including high transportation costs and unreliable public transport,because of this many students enter late to important lectures and miss vital information that could pontentially effect their results. Statistics indicate that approximately 15-20% of public transport services in the UK experience delays. Additionally, around 20% of university students report struggling to afford public transport, with some even missing classes due to these costs. This project provides a ride-sharing web application that allows students to:
 
-This receipe is for development - Node.js is run in using supervisor: changes to any file in the app will trigger a rebuild automatically.
+* Find and book rides with other students traveling on similar routes.
+* Offer empty seats as drivers and share travel costs.
+* Enhance safety through a user rating and review system.
+* Ensure secure authentication restricted to verified university affiliates.
+* Ensure the the cost is convenient for most students.
+The application is built using Node.js, Express.js, and MySQL, with a PUG-based frontend. It is containerised using Docker, and CI/CD pipelines are managed through GitHub Actions.
 
-For security, this receipe uses a .env file for credentials.  A sample is provided in the env-sample file. If using these files for a fresh project, copy the env-sample file to a file called .env.  Do NOT commit the changed .env file into your new project for security reasons (in the node package its included in .gitignore so you can't anyway)
+Features
+* User Registration & Login: Secure authentication via university email ensures a trusted community.
+* Ride Posting & Booking: Drivers can list available seats, and passengers can book rides with filtering options.
+* Ride Search & Filtering: Users can refine results based on schedule, route, and user ratings.
+* Rating & Review System: Post-ride feedback fosters accountability and safety.
+* Admin Moderation Panel: Enables management of user reports, disputes, and platform integrity.
 
-In node.js, we use the MySQl2 packages (to avoid problems with MySQL8) and the dotenv package to read the environment variables.
+Tech Stack
+Category  Technologies Used
+Frontend  HTML, CSS, JavaScript, PUG (Templating Engine)
+Backend Node.js, Express.js
+Database  MySQL
+DevOps & CI/CD  Docker, GitHub Actions
+Project Management  GitHub Projects (Kanban Board)
+Getting Started
+1. Clone the Repository
+sh
+CopyEdit
+git clone https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY_NAME.git  
+cd YOUR_REPOSITORY_NAME
+2. Set Up Environment Variables
+Copy the sample .env file and update it with your database credentials:
+sh
+CopyEdit
+cp env-sample .env
+3. Install Dependencies
+sh
+CopyEdit
+npm install
+4. Run the Application (Locally)
+sh
+CopyEdit
+npm start
+The server should be running at http://localhost:3000.
 
-Local files are mounted into the container using the 'volumes' directive in the docker-compose.yml for ease of development.
+Running with Docker
+1. Build and Run Containers
+sh
+CopyEdit
+docker-compose up --build
+2. Access Services
+* Web Application: http://localhost:3000
+* phpMyAdmin: http://localhost:8082 (for database management)
+* MySQL Database: mysql://db:3306
+3. Stop Containers
+sh
+CopyEdit
+docker-compose down
 
-### Super-quickstart your new project:
+Contributing
+Contributions are welcomed. Follow the standard workflow:
+1. Fork the repository
+2. Create a new feature branch
+sh
+CopyEdit
+git checkout -b feature-name
+1. Commit changes
+sh
+CopyEdit
+git commit -m "Added feature: [brief description]"
+1. Push updates
+sh
+CopyEdit
+git push origin feature-name
+1. Open a Pull Request
+2. Submit for review via GitHub
 
-* Make sure that you don't have any other containers running usind dockers ps
-* run ```docker-compose up --build```
+Useful Links
+* GitHub Repository: [https://github.com/Saif1231231/SE-Coursework]
+* Kanban Board: [https://github.com/users/Saif1231231/projects/1]
 
-#### Visit phphmyadmin at:
-
-http://localhost:8082/
-
-#### Visit your express app at:
-
-http://localhost:3000
-
-For reference, see the video at: https://roehampton.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=6f290a6b-ba94-4729-9632-adcf00ac336e
-
-NB if you are running this on your own computer rather than the azure labs that has been set up for you, you will need to install the following:
-
-* node.js  (windows: https://nodejs.org/en/download/)
-* docker desktop (for windows, this will also prompt you to install linux subsystem for windows https://docs.docker.com/desktop/windows/install/ )
-
-### Whats provided in these scaffolding files?
+License
+This project is licensed under the MIT License. It is open-source and can be modified for educational and personal use.
 
 
-  * A docker setup which will provide you with node.js, mysql and phpmyadmin, including the configuration needed so that both node.js AND phpmyadmin can 'see' and connect to your mysql database.  If you don't use docker you'll have to set up and connect each of these components separately.
-  * A basic starting file structure for a node.js app.
-  * A package.json file that will pull in the node.js libraries required and start your app as needed.
-  * A db.js file which provides all the code needed to connect to the mysql database, using the credentials in the .env file, and which provides a query() function that can send queries to the database and receive a result.  In order to use this (ie. interact with the database, you simply need to include this file in any file you create that needs this database interaction) with the following code:
 
-```const db = require('./services/db');
-```
 
-____
 
-Useful commands:
 
-Get a shell in any of the containers
 
-```bash
-docker exec -it <container name> bash -l
-```
+Ride Sharing to University
+This is a university ride-sharing platform designed to help students connect and share rides efficiently, reducing transportation costs and allowing sustainability to lower students transportation cost and save time.
 
-Once in the database container, you can get a MySQL CLI in the usual way
+Project Overview
+Many university students face challenges with transportation mostly, including high transportation costs and unreliable public transport,because of this many students enter late to important lectures and miss vital information that could pontentially effect their results. Statistics indicate that approximately 15-20% of public transport services in the UK experience delays. Additionally, around 20% of university students report struggling to afford public transport, with some even missing classes due to these costs. This project provides a ride-sharing web application that allows students to:
 
-```bash
-mysql -uroot -p<password> 
-```
-d
+* Find and book rides with other students traveling on similar routes.
+* Offer empty seats as drivers and share travel costs.
+* Enhance safety through a user rating and review system.
+* Ensure secure authentication restricted to verified university affiliates.
+* Ensure the the cost is convenient for most students.
+The application is built using Node.js, Express.js, and MySQL, with a PUG-based frontend. It is containerised using Docker, and CI/CD pipelines are managed through GitHub Actions.
+
+Features
+* User Registration & Login: Secure authentication via university email ensures a trusted community.
+* Ride Posting & Booking: Drivers can list available seats, and passengers can book rides with filtering options.
+* Ride Search & Filtering: Users can refine results based on schedule, route, and user ratings.
+* Rating & Review System: Post-ride feedback fosters accountability and safety.
+* Admin Moderation Panel: Enables management of user reports, disputes, and platform integrity.
+
+Tech Stack
+Category  Technologies Used
+Frontend  HTML, CSS, JavaScript, PUG (Templating Engine)
+Backend Node.js, Express.js
+Database  MySQL
+DevOps & CI/CD  Docker, GitHub Actions
+Project Management  GitHub Projects (Kanban Board)
+Getting Started
+1. Clone the Repository
+git clone https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY_NAME.git  
+cd YOUR_REPOSITORY_NAME
+2. Set Up Environment Variables
+Copy the sample .env file and update it with your database credentials:
+
+cp env-sample .env
+3. Install Dependencies
+
+npm install
+4. Run the Application (Locally)
+
+npm start
+The server should be running at http://localhost:3000.
+
+Running with Docker
+1. Build and Run Containers
+
+docker-compose up --build
+2. Access Services
+* Web Application: http://localhost:3000
+* phpMyAdmin: http://localhost:8082 (for database management)
+* MySQL Database: mysql://db:3306
+3. Stop Containers
+
+docker-compose down
+
+Contributing
+Contributions are welcomed. Follow the standard workflow:
+1. Fork the repository
+2. Create a new feature branch
+git checkout -b feature-name
+
+1. Commit changes
+git commit -m "Added feature: [brief description]"
+1. Push updates
+git push origin feature-name
+1. Open a Pull Request
+2. Submit for review via GitHub
+
+Useful Links
+* GitHub Repository: [https://github.com/Saif1231231/SE-Coursework]
+* Kanban Board: [https://github.com/users/Saif1231231/projects/1]
+
+License
+This project is licensed under the MIT License. It is open-source and can be modified for educational and personal use.
