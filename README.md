@@ -164,4 +164,5 @@ Useful Links
 * Kanban Board: [https://github.com/users/Saif1231231/projects/1]
 
 License
-This project is licensed under the MIT License. It is open-source and can be modified for educational and personal use.
+This project is licensed under the MIT License. It is open-source and can be modified for educational and personal use
+
