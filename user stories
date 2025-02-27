@@ -1,0 +1,63 @@
+User stories – for application
+
+Actors:
+
+· Student: Represents both passengers and drivers who are university students.
+
+· Admin: Represents the system administrator responsible for user verification and moderation.
+
+Use Cases:
+
+1. User Registration & Authentication:
+
+a. Register Account: Students can create an account using their university email.
+
+b. Log In: Registered students can log into the platform.
+
+c. Verify Users: Admins verify new user registrations to ensure they are legitimate students.
+
+2. Ride Management (Driver):
+
+a. Post Ride: Drivers can offer a ride by specifying details like pickup location, destination, departure time, available seats, and cost per seat.
+
+b. Edit Ride: Drivers can modify details of their posted rides.
+
+c. Cancel Ride: Drivers can cancel a ride they've previously posted.
+
+d. View Ride History: Drivers can view a list of their past and upcoming rides.
+
+3. Ride Search & Booking (Passenger):
+
+a. Search Rides: Passengers can look for available rides based on criteria like date, time, pickup location, and destination.
+
+b. Book Ride: Passengers can reserve a seat in a selected ride.
+
+c. Cancel Booking: Passengers can cancel their ride bookings before departure.
+
+d. View Booking History: Passengers can view their past and upcoming ride bookings.
+
+4. Rating & Review System:
+
+a. Leave Feedback: Passengers can rate and review drivers after a ride.
+
+b. Receive Feedback: Drivers can view ratings and reviews they've received.
+
+c. View Driver Ratings: Passengers can see a driver's average rating before booking a ride.
+
+5. Admin Moderation & Dispute Resolution:
+
+a. Moderate Reviews: Admins can review and remove inappropriate reviews.
+
+b. Suspend Users: Admins can suspend users who violate platform rules.
+
+c. Resolve Disputes: Admins can mediate conflicts between drivers and passengers.
+
+Relationships:
+
+· Represents mandatory use case relationships.
+
+o The "Post Ride" use case includes "Specify Ride Details" as drivers must provide details when posting a ride.
+
+o The "Book Ride" use case includes "Select Payment Method" as passengers must choose how to pay when booking.
+
+· Represents optional use case relationships.
