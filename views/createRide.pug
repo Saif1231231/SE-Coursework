@@ -1,0 +1,30 @@
+doctype html
+html
+  head
+    title Post a Ride
+    link(rel="stylesheet" href="/styles.css")
+  body
+    h1 Post a Ride
+
+    form(method="POST" action="/rides/create")
+      label(for="driverID") Driver ID:
+      input(type="number" name="driverID" required)
+
+      label(for="pickupLocation") Pickup Location:
+      input(type="text" name="pickupLocation" required)
+
+      label(for="destination") Destination:
+      input(type="text" name="destination" required)
+
+      label(for="departureTime") Departure Time:
+      input(type="datetime-local" name="departureTime" required)
+
+      label(for="seatsAvailable") Seats Available:
+      input(type="number" name="seatsAvailable" required)
+
+      label(for="price") Price (£):
+      input(type="number" step="0.01" name="price" required)
+
+      button(type="submit") Submit
+
+    a(href="/rides/list") View Available Rides

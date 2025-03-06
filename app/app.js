@@ -1,48 +1,58 @@
 // Import express.js
 const express = require("express");
+const path = require("path");
 
 // Create express app
-var app = express();
+const app = express();
 
-// Add static files location
-app.use(express.static("static"));
+// ✅ Set PUG as the view engine for frontend templates
+app.set("view engine", "pug");
+app.set("views", path.join(__dirname, "../views"));  // Ensure views folder is in the correct location
 
-// Get the functions in the db.js file to use
-const db = require('./services/db');
+// ✅ Serve static files (CSS, JS, images)
+app.use(express.static(path.join(__dirname, "../public")));
 
-// Create a route for root - /
-app.get("/", function(req, res) {
-    res.send("Hello world!");
+// ✅ Middleware to parse JSON and form data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ✅ Import Database Connection
+const db = require("../services/db");  // Correct path for db.js
+
+// ✅ Import Routes
+const ridesRoutes = require("../routes/rides");
+const bookingsRoutes = require("../routes/bookings");
+const reviewsRoutes = require("../routes/reviews");
+
+// ✅ Register Routes
+app.use("/rides", ridesRoutes);
+app.use("/bookings", bookingsRoutes);
+app.use("/reviews", reviewsRoutes);
+
+// ✅ Home Page Route (Render Home Page with PUG)
+app.get("/", function (req, res) {
+    res.render("home", { title: "Welcome to Ride Sharing!" });
 });
 
-// Create a route for testing the db
-app.get("/db_test", function(req, res) {
-    // Assumes a table called test_table exists in your database
-    sql = 'select * from test_table';
-    db.query(sql).then(results => {
+// ✅ Test Database Connection
+app.get("/db_test", async function (req, res) {
+    try {
+        const results = await db.query("SELECT * FROM test_table");  // Ensure this table exists
         console.log(results);
-        res.send(results)
-    });
+        res.json(results);
+    } catch (err) {
+        console.error("Database query error:", err);
+        res.status(500).send("Database error");
+    }
 });
 
-// Create a route for /goodbye
-// Responds to a 'GET' request
-app.get("/goodbye", function(req, res) {
-    res.send("Goodbye world!");
+// ✅ Handle 404 Errors
+app.use((req, res) => {
+    res.status(404).render("404", { title: "Page Not Found" });
 });
 
-// Create a dynamic route for /hello/<name>, where name is any value provided by user
-// At the end of the URL
-// Responds to a 'GET' request
-app.get("/hello/:name", function(req, res) {
-    // req.params contains any parameters in the request
-    // We can examine it in the console for debugging purposes
-    console.log(req.params);
-    //  Retrieve the 'name' parameter and use it in a dynamically generated page
-    res.send("Hello " + req.params.name);
-});
-
-// Start server on port 3000
-app.listen(3000,function(){
-    console.log(`Server running at http://127.0.0.1:3000/`);
+// ✅ Set the Port Dynamically (Supports .env)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, function () {
+    console.log(`✅ Server running at http://127.0.0.1:${PORT}/`);
 });
