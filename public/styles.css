@@ -1,0 +1,108 @@
+/* Review Styles */
+.review-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 15px auto;
+  width: 80%;
+  max-width: 800px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.review-form {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.rating {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+.review-text {
+  font-size: 1.1em;
+  line-height: 1.5;
+  margin: 10px 0;
+}
+
+.review-date {
+  color: #666;
+  font-size: 0.9em;
+  text-align: right;
+}
+
+textarea#comment {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+select#rating {
+  width: auto;
+  padding: 8px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.reviews-list {
+  margin-top: 40px;
+}
+
+/* Add these to your existing styles */
+
+.rides-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+
+.ride-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 15px 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #ddd;
+}
+
+.ride-card h3 {
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.ride-card p {
+  margin: 10px 0;
+}
+
+.ride-card strong {
+  color: #555;
+}
+
+.no-rides {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 1.2em;
+}
+
+.button-container {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.button-container .btn {
+  margin: 0 10px;
+} 

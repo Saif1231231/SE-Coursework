@@ -1,0 +1,40 @@
+extends ../layout
+
+block content
+  h1 Customer Reviews
+  
+  //- Review Form Section
+  div.review-form
+    h2 Write a Review
+    form(action="/reviews/create" method="POST")
+      div.form-group
+        label(for="rating") Rating:
+        select#rating(name="rating" required)
+          option(value="1") 1 Star ⭐
+          option(value="2") 2 Stars ⭐⭐
+          option(value="3") 3 Stars ⭐⭐⭐
+          option(value="4") 4 Stars ⭐⭐⭐⭐
+          option(value="5") 5 Stars ⭐⭐⭐⭐⭐
+
+      div.form-group
+        label(for="review") Your Review:
+        textarea#review(name="review" required)
+
+      button.btn.btn-primary(type="submit") Submit Review
+
+  //- Reviews List Section
+  div.reviews-list
+    h2 All Reviews
+    if reviews && reviews.length
+      each review in reviews
+        div.review-card
+          div.rating
+            - var stars = '⭐'.repeat(review.rating)
+            span= stars
+          p.review-text= review.review
+          p.review-date= new Date(review.timestamp).toLocaleDateString()
+    else
+      p No reviews yet. Be the first to write one!
+
+  div.button-container
+    a.btn.btn-secondary(href="/") Back to Home 

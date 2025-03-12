@@ -1,0 +1,29 @@
+extends ../layout
+
+block content
+  h1 Available Rides
+  
+  div.button-container
+    a.btn.btn-primary(href="/rides/create") Post a New Ride
+
+  if rides && rides.length
+    div.rides-container
+      each ride in rides
+        div.ride-card
+          h3 #{ride.pickupLocation} to #{ride.destination}
+          p
+            strong Departure: 
+            span= new Date(ride.departureTime).toLocaleString()
+          p
+            strong Available Seats: 
+            span= ride.seatsAvailable
+          p
+            strong Price: 
+            span £#{ride.price}
+          div.button-container
+            a.btn.btn-primary(href=`/rides/${ride.rideId}`) View Details
+  else
+    p.no-rides No rides available at the moment.
+
+  div.button-container
+    a.btn.btn-secondary(href="/") Back to Home 

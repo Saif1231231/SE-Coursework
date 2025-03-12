@@ -1,0 +1,20 @@
+extends ../layout
+
+block content
+  h1 Ride Details
+  
+  div.ride-details-card
+    h2 #{ride.pickupLocation} to #{ride.destination}
+    p
+      strong Departure Time: 
+      span= new Date(ride.departureTime).toLocaleString()
+    p
+      strong Available Seats: 
+      span= ride.seatsAvailable
+    p
+      strong Price: 
+      span £#{ride.price}
+    
+    div.button-container
+      a.btn.btn-primary(href="/bookings/create/" + ride.rideId) Book This Ride
+      a.btn.btn-secondary(href="/rides") Back to Rides 
