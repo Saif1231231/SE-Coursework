@@ -1,7 +1,7 @@
 extends layout
 
 block content
-  h2 Available Rides
+  h1 Available Rides
   table
     thead
       tr
@@ -15,6 +15,6 @@ block content
         tr
           td= ride.pickupLocation
           td= ride.destination
-          td= ride.departureTime
+          td= new Date(ride.departureTime).toLocaleString()
           td= ride.price + " USD"
           td: a.btn.btn-primary(href="/rides/" + ride.rideID) View Details

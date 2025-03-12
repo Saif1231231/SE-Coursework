@@ -120,4 +120,24 @@ body {
     cursor: pointer;
   }
   
+  /* 🔹 Centering Forms */
+form {
+  width: 50%;
+  margin: auto;
+}
+
+/* 🔹 Button Styling */
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+/* 🔹 Table Improvements */
+table {
+  width: 90%;
+  margin: auto;
+}
+
   

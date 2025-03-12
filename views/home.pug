@@ -1,6 +1,9 @@
 extends layout
 
 block content
-  h2 Welcome to Ride Sharing!
+  h1 Welcome to Ride Sharing!
   p Find and book rides easily.
-  a.btn.btn-primary(href="/rides") View Rides
+  div.button-container
+    a.btn.btn-primary(href="/rides/list") View Available Rides
+    a.btn.btn-secondary(href="/rides/create") Post a Ride
+    a.btn.btn-primary(href="/reviews") View Reviews

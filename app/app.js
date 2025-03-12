@@ -2,27 +2,26 @@
 const express = require("express");
 const path = require("path");
 
-// Create express app
 const app = express();
 
 // ✅ Set PUG as the view engine for frontend templates
 app.set("view engine", "pug");
-app.set("views", path.join(__dirname, "views"));  // Updated path
+app.set("views", path.join(__dirname, "../views"));  // ✅ Ensure correct views path
 
 // ✅ Serve static files (CSS, JS, images)
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "../public")));
 
 // ✅ Middleware to parse JSON and form data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ✅ Import Database Connection
-const db = require("./services/db");  // Updated correct path for db.js
+const db = require("../services/db");
 
-// ✅ Import Routes
-const ridesRoutes = require("./routes/rides");
-const bookingsRoutes = require("./routes/bookings");
-const reviewsRoutes = require("./routes/reviews");
+// ✅ Import Routes (Ensure these paths are correct)
+const ridesRoutes = require("../routes/rides");
+const bookingsRoutes = require("../routes/bookings");
+const reviewsRoutes = require("../routes/reviews");
 
 // ✅ Register Routes
 app.use("/rides", ridesRoutes);
@@ -31,7 +30,7 @@ app.use("/reviews", reviewsRoutes);
 
 // ✅ Home Page Route (Render Home Page with PUG)
 app.get("/", function (req, res) {
-    res.render("pages/home", { title: "Welcome to Ride Sharing!" });  // Updated path
+    res.render("home", { title: "Welcome to Ride Sharing!" });  // ✅ Updated path
 });
 
 // ✅ Test Database Connection
@@ -48,7 +47,7 @@ app.get("/db_test", async function (req, res) {
 
 // ✅ Handle 404 Errors
 app.use((req, res) => {
-    res.status(404).render("pages/404", { title: "Page Not Found" });  // Updated path
+    res.status(404).render("404", { title: "Page Not Found" });  // ✅ Updated path
 });
 
 // ✅ Set the Port Dynamically (Supports .env)
