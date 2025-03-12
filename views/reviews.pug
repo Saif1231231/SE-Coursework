@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  h2 Reviews for this Ride
+  each review in reviews
+    p #{review.rating} ⭐ - #{review.review}
+
+  form(action="/reviews/create" method="POST")
+    label(for="rating") Rating:
+    select(name="rating" required)
+      option(value="1") 1 ⭐
+      option(value="2") 2 ⭐
+      option(value="3") 3 ⭐
+      option(value="4") 4 ⭐
+      option(value="5") 5 ⭐
+
+    label(for="review") Your Review:
+    textarea(name="review" required)
+
+    button.btn.btn-primary(type="submit") Submit Review
+  a.btn.btn-secondary(href="/rides") Back to Rides

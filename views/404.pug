@@ -1,9 +1,8 @@
-doctype html
-html
-  head
-    title Page Not Found
-    link(rel="stylesheet" href="/styles.css")
-  body
-    h1 404 - Page Not Found
+extends layout
+
+block content
+  div.alert-error
+    h2  Page Not Found
     p Oops! The page you are looking for does not exist.
-    a(href="/") Go Back to Home
+  a.btn.btn-primary(href="/") Go Back to Home
+

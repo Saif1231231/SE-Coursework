@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  h2 Ride Details
+  p Pickup: #{ride.pickupLocation}
+  p Destination: #{ride.destination}
+  p Departure: #{ride.departureTime}
+  p Seats Available: #{ride.seatsAvailable}
+  p Price: #{ride.price} USD
+  a.btn.btn-secondary(href="/rides") Back to Rides

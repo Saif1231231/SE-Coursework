@@ -1,32 +1,20 @@
-doctype html
-html
-  head
-    title Ride Listings
-    link(rel="stylesheet" href="/styles.css")
-  body
-    h1 Available Rides
+extends layout
 
-    table
-      thead
+block content
+  h2 Available Rides
+  table
+    thead
+      tr
+        th Pickup Location
+        th Destination
+        th Departure Time
+        th Price
+        th Action
+    tbody
+      each ride in rides
         tr
-          th Ride ID
-          th Driver ID
-          th Pickup Location
-          th Destination
-          th Departure Time
-          th Seats Available
-          th Price
-          th Action
-      tbody
-        each ride in rides
-          tr
-            td= ride.rideID
-            td= ride.driverID
-            td= ride.pickupLocation
-            td= ride.destination
-            td= new Date(ride.departureTime).toLocaleString()
-            td= ride.seatsAvailable
-            td= `$${ride.price}`
-            td
-              form(method="POST" action=`/bookings/book/${ride.rideID}`)
-                button(type="submit") Book Now
+          td= ride.pickupLocation
+          td= ride.destination
+          td= ride.departureTime
+          td= ride.price + " USD"
+          td: a.btn.btn-primary(href="/rides/" + ride.rideID) View Details

@@ -1,0 +1,22 @@
+extends layout
+
+block content
+  h2 Post a New Ride
+  form(action="/create-ride" method="POST")
+    label(for="pickupLocation") Pickup Location:
+    input(type="text" name="pickupLocation" required)
+
+    label(for="destination") Destination:
+    input(type="text" name="destination" required)
+
+    label(for="departureTime") Departure Time:
+    input(type="datetime-local" name="departureTime" required)
+
+    label(for="seatsAvailable") Seats Available:
+    input(type="number" name="seatsAvailable" required)
+
+    label(for="price") Price:
+    input(type="number" step="0.01" name="price" required)
+
+    button.btn.btn-primary(type="submit") Submit Ride
+  a.btn.btn-secondary(href="/") Back to Home
