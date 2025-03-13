@@ -4,8 +4,11 @@ block content
   h1 Post a New Ride
   form(method="POST" action="/rides/create")
     div.form-group
-      label(for="driverID") Driver ID:
-      input(type="number" name="driverID" required)
+      label(for="driverID") Driver:
+      select(name="driverID" required)
+        option(value="") Select a driver
+        each driver in drivers
+          option(value=driver.driver_id) #{driver.name} - #{driver.vehicle_details}
 
     div.form-group
       label(for="pickupLocation") Pickup Location:

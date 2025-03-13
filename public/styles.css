@@ -105,4 +105,78 @@ select#rating {
 
 .button-container .btn {
   margin: 0 10px;
+}
+
+.ride-details-card {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 30px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.ride-details-card h2 {
+  color: #333;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.ride-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.info-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 6px;
+}
+
+.info-section h3 {
+  color: #444;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #eee;
+}
+
+.info-section p {
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+.info-section strong {
+  color: #555;
+  display: inline-block;
+  width: 120px;
+}
+
+.ride-status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.ride-status.requested {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.ride-status.accepted {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.ride-status.completed {
+  background: #f5f5f5;
+  color: #616161;
+}
+
+.ride-status.cancelled {
+  background: #ffebee;
+  color: #c62828;
 } 

@@ -5,13 +5,30 @@ const db = require("../services/db");
 // Show Reviews Page
 router.get("/", async (req, res) => {
     try {
-        // Simplified query to just get basic review information
-        const reviews = await db.query(`
-            SELECT reviewId, rating, review, timestamp 
-            FROM review 
-            ORDER BY timestamp DESC
-        `);
-        res.render("reviews/reviews", { reviews });
+        const [reviews, rides, passengers, drivers] = await Promise.all([
+            db.query(`
+                SELECT r.*, 
+                       p.name as passenger_name,
+                       d.name as driver_name,
+                       rd.pickup_location,
+                       rd.dropoff_location
+                FROM review r
+                LEFT JOIN passenger p ON r.passenger_id = p.passenger_id
+                LEFT JOIN driver d ON r.driver_id = d.driver_id
+                LEFT JOIN ride rd ON r.ride_id = rd.ride_id
+                ORDER BY r.created_at DESC
+            `),
+            db.query("SELECT ride_id, pickup_location, dropoff_location FROM ride"),
+            db.query("SELECT passenger_id, name FROM passenger"),
+            db.query("SELECT driver_id, name FROM driver")
+        ]);
+
+        res.render("reviews/reviews", { 
+            reviews,
+            rides,
+            passengers,
+            drivers
+        });
     } catch (err) {
         console.error("Error fetching reviews:", err);
         res.status(500).send("Database error: " + err.message);
@@ -21,18 +38,12 @@ router.get("/", async (req, res) => {
 // Handle Review Creation
 router.post("/create", async (req, res) => {
     try {
-        const { rating, review } = req.body;
+        const { rating, review, rideId, passengerId, driverId } = req.body;
         
-        // For testing purposes, use placeholder values
-        const reviewId = 'REV' + Date.now();
-        const bookingId = 'BOOK1'; // placeholder
-        const passengerId = 'PASS1'; // placeholder
-        const rideId = 'RIDE1'; // placeholder
-
         await db.query(
-            `INSERT INTO review (reviewId, bookingId, passengerId, rideId, rating, review) 
-             VALUES (?, ?, ?, ?, ?, ?)`,
-            [reviewId, bookingId, passengerId, rideId, rating, review]
+            `INSERT INTO review (ride_id, passenger_id, driver_id, rating, comment) 
+             VALUES (?, ?, ?, ?, ?)`,
+            [rideId, passengerId, driverId, rating, review]
         );
         
         res.redirect("/reviews");

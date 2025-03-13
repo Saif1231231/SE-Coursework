@@ -6,9 +6,10 @@ const db = require("../services/db");
 router.get("/", async (req, res) => {
     try {
         const rides = await db.query(`
-            SELECT * FROM ride 
-            WHERE seatsAvailable > 0 
-            ORDER BY departureTime
+            SELECT r.*, d.name as driver_name, d.vehicle_details
+            FROM ride r
+            LEFT JOIN driver d ON r.driver_id = d.driver_id
+            ORDER BY r.departureTime
         `);
         res.render("rides/rides", { rides });
     } catch (err) {
@@ -18,22 +19,26 @@ router.get("/", async (req, res) => {
 });
 
 // Show Create Ride Form
-router.get("/create", (req, res) => {
-    res.render("rides/createRide");
+router.get("/create", async (req, res) => {
+    try {
+        const drivers = await db.query("SELECT driver_id, name, vehicle_details FROM driver");
+        res.render("rides/createRide", { drivers });
+    } catch (err) {
+        console.error("Error fetching drivers:", err);
+        res.status(500).send("Database error: " + err.message);
+    }
 });
 
 // Handle Create Ride Form Submission
 router.post("/create", async (req, res) => {
     try {
-        const { pickupLocation, destination, departureTime, seatsAvailable, price } = req.body;
-        const rideId = 'RIDE' + Date.now();
-        const driverId = 'DRV1'; // placeholder driver ID
-
+        const { driverID, pickupLocation, destination, departureTime, seatsAvailable, price } = req.body;
+        
         await db.query(
-            `INSERT INTO ride (rideId, driverId, pickupLocation, destination, 
-                             departureTime, seatsAvailable, price) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [rideId, driverId, pickupLocation, destination, 
+            `INSERT INTO ride (driver_id, pickup_location, dropoff_location, 
+                             departureTime, seatsAvailable, fare, status) 
+             VALUES (?, ?, ?, ?, ?, ?, 'requested')`,
+            [driverID, pickupLocation, destination, 
              departureTime, seatsAvailable, price]
         );
         res.redirect("/rides");
@@ -47,7 +52,10 @@ router.post("/create", async (req, res) => {
 router.get("/:rideId", async (req, res) => {
     try {
         const [ride] = await db.query(
-            "SELECT * FROM ride WHERE rideId = ?", 
+            `SELECT r.*, d.name as driver_name, d.vehicle_details
+             FROM ride r
+             LEFT JOIN driver d ON r.driver_id = d.driver_id
+             WHERE r.ride_id = ?`, 
             [req.params.rideId]
         );
         

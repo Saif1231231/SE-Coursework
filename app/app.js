@@ -18,12 +18,10 @@ const db = require("../services/db");
 
 // ✅ Import Routes (Ensure the paths are correct)
 const ridesRoutes = require("../routes/rides");
-const bookingsRoutes = require("../routes/bookings");
 const reviewsRoutes = require("../routes/reviews");
 
 // ✅ Register Routes
 app.use("/rides", ridesRoutes);
-app.use("/bookings", bookingsRoutes);
 app.use("/reviews", reviewsRoutes);
 
 // ✅ Home Page Route
