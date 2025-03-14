@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const session = require('express-session');
 
 // ✅ Create Express app
 const app = express();
@@ -13,20 +14,36 @@ app.use(express.static(path.join(__dirname, "../public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Session setup
+app.use(session({
+    secret: 'your-secret-key',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false } // set to true if using https
+}));
+
 // ✅ Import Database Connection
 const db = require("../services/db");
 
-// ✅ Import Routes (Ensure the paths are correct)
+// ✅ Import Routes
 const ridesRoutes = require("../routes/rides");
 const reviewsRoutes = require("../routes/reviews");
+const studentRoutes = require("../routes/student");
+const adminRoutes = require("../routes/admin");
+const driverRoutes = require("../routes/driver");
+const authRoutes = require("../routes/auth");
 
 // ✅ Register Routes
+app.use("/auth", authRoutes);
 app.use("/rides", ridesRoutes);
 app.use("/reviews", reviewsRoutes);
+app.use("/student", studentRoutes);
+app.use("/admin", adminRoutes);
+app.use("/driver", driverRoutes);
 
 // ✅ Home Page Route
 app.get("/", (req, res) => {
-    res.render("home", { title: "Welcome to Ride Sharing!" });
+    res.render("home");
 });
 
 // ✅ Test Database Route (for debugging)
@@ -58,3 +75,5 @@ db.query("SELECT 1") // Check DB connection
     console.error("❌ Unable to start server. Database connection failed.");
     process.exit(1); // Exit process if DB connection is broken
   });
+
+module.exports = app;

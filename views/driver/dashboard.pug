@@ -1,0 +1,76 @@
+extends ../layout
+
+block content
+    style.
+        .card {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: 100%;
+        }
+        .card-body {
+            display: flex;
+            flex-direction: column;
+        }
+        .card-text {
+            flex-grow: 1;
+            margin-bottom: 1rem;
+        }
+        .btn {
+            align-self: flex-start;
+        }
+        .badge {
+            padding: 8px 12px;
+            font-size: 0.9em;
+        }
+
+    .container.mt-4
+        h1.mb-4.text-center UniShared
+        h3.mb-4.text-center Driver Dashboard
+        if message
+            .alert.alert-info= message
+
+        .row
+            .col-md-4.mb-4
+                .card
+                    .card-body
+                        h5.card-title Available Rides
+                        p.card-text View and accept available ride requests
+                        a.btn.btn-primary(href='/driver/accept-ride') View Available Rides
+
+            .col-md-4.mb-4
+                .card
+                    .card-body
+                        h5.card-title My Active Rides
+                        p.card-text Manage your current ride commitments
+                        a.btn.btn-primary(href='/driver/active-rides') View Active Rides
+
+            .col-md-4.mb-4
+                .card
+                    .card-body
+                        h5.card-title Review Rides
+                        p.card-text Review your completed rides
+                        a.btn.btn-primary(href='/driver/review-ride') Review Rides
+
+        if rides && rides.length > 0
+            h4.mt-4 Your Recent Rides
+            .table-responsive
+                table.table.table-striped
+                    thead
+                        tr
+                            th Pickup
+                            th Dropoff
+                            th Date
+                            th Status
+                            th Actions
+                    tbody
+                        each ride in rides
+                            tr
+                                td= ride.pickup_location
+                                td= ride.dropoff_location
+                                td= new Date(ride.departure_time).toLocaleDateString()
+                                td
+                                    span.badge(class=ride.status === 'completed' ? 'bg-success' : ride.status === 'cancelled' ? 'bg-danger' : 'bg-primary')= ride.status
+                                td
+                                    if ride.status === 'accepted'
+                                        a.btn.btn-sm.btn-danger(href=`/driver/cancel-ride/${ride.ride_id}`) Cancel
+        else
+            .alert.alert-info.mt-4 No recent rides found.

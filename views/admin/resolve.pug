@@ -1,0 +1,69 @@
+extends ../layout
+
+block content
+    style.
+        .card {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #f8f9fa;
+        }
+        .badge {
+            padding: 8px 12px;
+            font-size: 0.9em;
+        }
+        textarea.form-control {
+            resize: vertical;
+        }
+        hr {
+            margin: 1rem 0;
+            opacity: 0.2;
+        }
+
+    .container.mt-4
+        h1.mb-4.text-center UniShared
+        h3.mb-4.text-center Resolve Disputes
+        if message
+            .alert.alert-info= message
+        
+        if disputes && disputes.length > 0
+            .row
+                each dispute in disputes
+                    .col-12.mb-4
+                        .card
+                            .card-header.d-flex.justify-content-between.align-items-center
+                                h5.mb-0 Dispute ##{dispute.dispute_id}
+                                span.badge.bg-warning= dispute.status
+                            .card-body
+                                h6.card-subtitle.mb-3 Ride Details
+                                .row.mb-3
+                                    .col-md-6
+                                        strong From: 
+                                        span= dispute.pickup_location
+                                    .col-md-6
+                                        strong To: 
+                                        span= dispute.dropoff_location
+                                hr
+                                .row.mb-3
+                                    .col-md-6
+                                        strong Driver: 
+                                        span= dispute.driver_name
+                                    .col-md-6
+                                        strong Passenger: 
+                                        span= dispute.passenger_name
+                                h6.mt-3 Dispute Description
+                                p.card-text= dispute.description
+                                form(method='POST' action=`/admin/resolve-dispute/${dispute.dispute_id}`)
+                                    .form-group.mb-3
+                                        label.form-label(for=`resolution-${dispute.dispute_id}`) Resolution
+                                        textarea.form-control(
+                                            id=`resolution-${dispute.dispute_id}`
+                                            name='resolution'
+                                            rows='3'
+                                            required
+                                            placeholder='Enter your resolution for this dispute...'
+                                        )
+                                    .text-end
+                                        button.btn.btn-primary(type='submit') Resolve Dispute
+        else
+            .alert.alert-info No pending disputes found. 

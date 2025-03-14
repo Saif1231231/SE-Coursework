@@ -1,8 +1,10 @@
-CREATE DATABASE IF NOT EXISTS ridesharing;
+-- Drop database if exists and create new one
+DROP DATABASE IF EXISTS ridesharing;
+CREATE DATABASE ridesharing;
 USE ridesharing;
 
 -- Admin Table
-CREATE TABLE admin (
+CREATE TABLE IF NOT EXISTS admin (
     admin_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -11,17 +13,19 @@ CREATE TABLE admin (
 );
 
 -- Passenger Table
-CREATE TABLE passenger (
+CREATE TABLE IF NOT EXISTS passenger (
     passenger_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     phone VARCHAR(15) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
+    verified BOOLEAN DEFAULT FALSE,
+    suspended BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Driver Table
-CREATE TABLE driver (
+CREATE TABLE IF NOT EXISTS driver (
     driver_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -30,26 +34,29 @@ CREATE TABLE driver (
     license_number VARCHAR(50) UNIQUE NOT NULL,
     vehicle_details VARCHAR(255),
     rating DECIMAL(3,2) DEFAULT 0.00,
+    verified BOOLEAN DEFAULT FALSE,
+    suspended BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Ride Table
-CREATE TABLE ride (
+CREATE TABLE IF NOT EXISTS ride (
     ride_id INT AUTO_INCREMENT PRIMARY KEY,
     passenger_id INT,
     driver_id INT,
     pickup_location VARCHAR(255) NOT NULL,
     dropoff_location VARCHAR(255) NOT NULL,
+    departureTime DATETIME NOT NULL,
     fare DECIMAL(10,2) NOT NULL,
     status ENUM('requested', 'accepted', 'completed', 'cancelled') NOT NULL DEFAULT 'requested',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    seatsAvailable INT DEFAULT 0,
+    seatsAvailable INT NOT NULL DEFAULT 4,
     FOREIGN KEY (passenger_id) REFERENCES passenger(passenger_id) ON DELETE SET NULL,
     FOREIGN KEY (driver_id) REFERENCES driver(driver_id) ON DELETE SET NULL
 );
 
 -- Booking Table
-CREATE TABLE booking (
+CREATE TABLE IF NOT EXISTS booking (
     booking_id INT AUTO_INCREMENT PRIMARY KEY,
     passenger_id INT NOT NULL,
     driver_id INT,
@@ -85,7 +92,7 @@ CREATE TABLE transaction (
 );
 
 -- Review Table
-CREATE TABLE review (
+CREATE TABLE IF NOT EXISTS review (
     review_id INT AUTO_INCREMENT PRIMARY KEY,
     ride_id INT NOT NULL,
     passenger_id INT NOT NULL,
@@ -108,60 +115,90 @@ CREATE TABLE notification (
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert into Admin Table
+-- Dispute Table
+CREATE TABLE IF NOT EXISTS dispute (
+    dispute_id INT AUTO_INCREMENT PRIMARY KEY,
+    ride_id INT NOT NULL,
+    passenger_id INT NOT NULL,
+    driver_id INT NOT NULL,
+    description TEXT NOT NULL,
+    status ENUM('pending', 'resolved') DEFAULT 'pending',
+    resolution TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ride_id) REFERENCES ride(ride_id) ON DELETE CASCADE,
+    FOREIGN KEY (passenger_id) REFERENCES passenger(passenger_id) ON DELETE CASCADE,
+    FOREIGN KEY (driver_id) REFERENCES driver(driver_id) ON DELETE CASCADE
+);
+
+-- First, clear existing data
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE review;
+TRUNCATE TABLE booking;
+TRUNCATE TABLE ride;
+TRUNCATE TABLE passenger;
+TRUNCATE TABLE driver;
+TRUNCATE TABLE admin;
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- Insert admin (password: test123)
 INSERT INTO admin (name, email, password_hash) VALUES
-('Admin One', 'admin1@example.com', 'hashedpassword1'),
-('Admin Two', 'admin2@example.com', 'hashedpassword2');
+('Admin One', 'admin1@example.com', 'test123');
 
--- Insert into Passenger Table
-INSERT INTO passenger (name, email, phone, password_hash) VALUES
-('Harry Kane', 'harry.kane@example.com', '07123456789', 'hashedpassword3'),
-('Raheem Sterling', 'raheem.sterling@example.com', '07123456780', 'hashedpassword4');
+-- Insert passengers (students) (password: test123)
+INSERT INTO passenger (name, email, phone, password_hash, verified) VALUES
+('Marcus Rashford', 'rashford@student.com', '07123456789', 'test123', TRUE),
+('Harry Kane', 'kane@student.com', '07987654321', 'test123', TRUE),
+('Jack Grealish', 'grealish@student.com', '07111222333', 'test123', FALSE),
+('Bukayo Saka', 'saka@student.com', '07444555666', 'test123', FALSE);
 
--- Insert into Driver Table
-INSERT INTO driver (name, email, phone, password_hash, license_number, vehicle_details, rating) VALUES
-('Lewis Hamilton', 'lewis.hamilton@example.com', '07123456781', 'hashedpassword5', 'LH12345', 'Mercedes-Benz', 4.9),
-('Max Verstappen', 'max.verstappen@example.com', '07123456782', 'hashedpassword6', 'MV67890', 'Red Bull Racing', 4.8);
+-- Insert drivers (password: test123)
+INSERT INTO driver (name, email, phone, password_hash, license_number, vehicle_details, rating, verified) VALUES
+('Lewis Hamilton', 'hamilton@f1.com', '07100100100', 'test123', 'F1-HAM-44', 'Mercedes AMG GT - Silver', 4.9, TRUE),
+('Max Verstappen', 'verstappen@f1.com', '07200200200', 'test123', 'F1-VER-33', 'Red Bull RB16B - Blue', 4.8, TRUE),
+('Lando Norris', 'norris@f1.com', '07300300300', 'test123', 'F1-NOR-04', 'McLaren MCL35M - Orange', 4.7, FALSE),
+('George Russell', 'russell@f1.com', '07400400400', 'test123', 'F1-RUS-63', 'Mercedes AMG GT - Black', 4.8, FALSE);
 
--- Insert into Ride Table
-INSERT INTO ride (passenger_id, driver_id, pickup_location, dropoff_location, fare, status, created_at, seatsAvailable)
-VALUES
-(1, 1, 'Croydon', 'Norbury', 25.00, 'requested', NOW(), 3),
-(2, 2, 'Streatham', 'Croydon', 30.00, 'accepted', NOW(), 2);
+-- Insert sample rides
+INSERT INTO ride (driver_id, pickup_location, dropoff_location, departureTime, fare, status, seatsAvailable) VALUES
+(1, 'London Euston', 'Manchester Piccadilly', DATE_ADD(NOW(), INTERVAL 1 DAY), 45.00, 'accepted', 4),
+(2, 'Birmingham New Street', 'Leeds Station', DATE_ADD(NOW(), INTERVAL 2 DAY), 35.00, 'accepted', 3),
+(3, 'Edinburgh Waverley', 'Glasgow Central', DATE_ADD(NOW(), INTERVAL 1 DAY), 25.00, 'accepted', 4),
+(4, 'Liverpool Lime Street', 'Manchester Victoria', DATE_ADD(NOW(), INTERVAL 3 DAY), 20.00, 'accepted', 3),
+(1, 'Oxford City Centre', 'Cambridge Station', DATE_ADD(NOW(), INTERVAL 2 DAY), 30.00, 'accepted', 4),
+(2, 'Bristol Temple Meads', 'Cardiff Central', DATE_ADD(NOW(), INTERVAL 1 DAY), 28.00, 'accepted', 3),
+(3, 'Newcastle Central', 'Durham Station', DATE_ADD(NOW(), INTERVAL 2 DAY), 15.00, 'accepted', 4),
+(4, 'Southampton Central', 'Portsmouth & Southsea', DATE_ADD(NOW(), INTERVAL 1 DAY), 12.00, 'accepted', 3),
+(1, 'Brighton Station', 'London Victoria', DATE_ADD(NOW(), INTERVAL 3 DAY), 25.00, 'accepted', 4),
+(2, 'Nottingham Station', 'Sheffield Station', DATE_ADD(NOW(), INTERVAL 2 DAY), 22.00, 'accepted', 3);
 
--- Insert into Booking Table
+-- Insert some completed rides with reviews
+INSERT INTO ride (driver_id, passenger_id, pickup_location, dropoff_location, departureTime, fare, status, seatsAvailable) VALUES
+(1, 1, 'Manchester United Stadium', 'Manchester City Centre', DATE_SUB(NOW(), INTERVAL 1 DAY), 25.00, 'completed', 3),
+(2, 2, 'Tottenham Stadium', 'London Bridge', DATE_SUB(NOW(), INTERVAL 2 DAY), 30.00, 'completed', 2);
+
+-- Insert reviews for completed rides
+INSERT INTO review (ride_id, passenger_id, driver_id, rating, comment) VALUES
+(11, 1, 1, 5, 'Lewis was as fast as his F1 car! Great service.'),
+(12, 2, 2, 5, 'Max got me to my destination in record time. Very professional.');
+
+-- Insert sample bookings
 INSERT INTO booking (passenger_id, driver_id, ride_id, booking_status) VALUES
-(1, 1, 1, 'confirmed'),
-(2, 2, 2, 'confirmed');
+(1, 1, 11, 'confirmed'),
+(2, 2, 12, 'confirmed');
 
--- Insert into Payment Table
-INSERT INTO payment (ride_id, passenger_id, amount, payment_method, status) VALUES
-(1, 1, 25.00, 'card', 'completed'),
-(2, 2, 30.00, 'cash', 'completed');
+-- Insert sample dispute
+INSERT INTO dispute (ride_id, passenger_id, driver_id, description, status) VALUES
+(11, 1, 1, 'Driver was late by 30 minutes', 'pending');
 
--- Insert into Transaction Table
-INSERT INTO transaction (payment_id, transaction_reference, status) VALUES
-(1, 'TXN123456', 'success'),
-(2, 'TXN654321', 'success');
+-- Example queries
+SELECT * FROM ride WHERE status = 'accepted' ORDER BY departureTime;
+SELECT * FROM driver WHERE email = 'hamilton@f1.com';
 
--- Insert into Review Table
-INSERT INTO review (ride_id, passenger_id, driver_id, rating, comment, created_at) VALUES
-(1, 1, 1, 5, 'Excellent service! Lewis was very professional and the ride was smooth.', NOW()),
-(2, 2, 2, 4, 'Great driver, comfortable ride. Would recommend!', NOW()),
-(1, 2, 1, 5, 'Perfect timing and very friendly driver.', NOW()),
-(2, 1, 2, 4, 'Good communication and safe driving.', NOW()),
-(1, 1, 1, 5, 'Best ride experience ever!', NOW());
+USE ridesharing;
+SELECT * FROM driver WHERE email = 'lewis.hamilton@example.com';
 
--- Insert into Notification Table
-INSERT INTO notification (user_id, user_type, message, status) VALUES
-(1, 'passenger', 'Your ride has been completed.', 'unread'),
-(2, 'driver', 'You have a new booking.', 'unread');
+UPDATE driver 
+SET password_hash = 'newpassword' 
+WHERE email = 'lewis.hamilton@example.com'; 
 
-ALTER TABLE ride ADD COLUMN seatsAvailable INT DEFAULT 0;
-
-SELECT * FROM ride WHERE status IN ('requested', 'accepted', 'completed');
-
--- Example query to fetch available rides
-SELECT * FROM ride
-WHERE status = 'requested'
-ORDER BY created_at DESC; 
+SELECT email, password_hash FROM driver WHERE email = 'lewis.hamilton@example.com'; 

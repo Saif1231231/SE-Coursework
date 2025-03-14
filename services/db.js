@@ -7,7 +7,7 @@ const config = {
     host: process.env.DB_HOST || "localhost",
     port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER || "root",
-    password: process.env.DB_PASSWORD || "newpassword",  // ✅ Ensure this matches your MySQL password
+    password: process.env.DB_PASSWORD || "newpassword",
     database: process.env.DB_NAME || "ridesharing",
     waitForConnections: true,
     connectionLimit: 10,
@@ -26,23 +26,30 @@ async function testConnection() {
     connection.release();
   } catch (error) {
     console.error("❌ MySQL Connection Error in db.js:", error.message);
-    process.exit(1); // Exit process if DB fails to connect
+    throw error;
   }
 }
 
 // Run the connection test
 testConnection();
 
+// Wrapper for database queries
+async function query(sql, params) {
+  try {
+    console.log('Executing SQL:', sql);
+    console.log('With parameters:', params);
+    const [results] = await pool.execute(sql, params);
+    console.log('Query results:', results);
+    return [results];
+  } catch (error) {
+    console.error('Query error:', error);
+    throw error;
+  }
+}
+
 // ✅ Export Query Function for Database Operations
 module.exports = {
-  query: async (sql, params) => {
-    try {
-      const [rows] = await pool.execute(sql, params);
-      return rows;
-    } catch (error) {
-      console.error("❌ Database Query Error:", error.message);
-      throw error;
-    }
-  },
+  query,
+  pool
 };
 

@@ -1,9 +1,29 @@
 extends layout
 
 block content
-  h1 Welcome to Ride Sharing!
-  p Find available rides easily.
-  div.button-container
-    a.btn.btn-primary(href="/rides") View Available Rides
-    a.btn.btn-secondary(href="/rides/create") Post a Ride
-    a.btn.btn-primary(href="/reviews") View Reviews
+  .container.min-vh-100.d-flex.align-items-center.justify-content-center
+    .text-center
+      h1.display-4.mb-4 UniShared
+      p.lead.mb-5 Your University Ridesharing Solution
+      
+      .row.justify-content-center
+        .col-md-6
+          .d-grid.gap-3
+            a.btn.btn-primary.btn-lg.mb-3(href="/auth/login?userType=student") Login as Student
+            a.btn.btn-primary.btn-lg.mb-3(href="/auth/login?userType=driver") Login as Driver
+            a.btn.btn-primary.btn-lg(href="/auth/login?userType=admin") Login as Admin
+
+  style.
+    .btn-lg {
+      padding: 15px 30px;
+      font-size: 1.2rem;
+      width: 100%;
+    }
+    .display-4 {
+      font-size: 3.5rem;
+      font-weight: 600;
+    }
+    .lead {
+      font-size: 1.5rem;
+      color: #666;
+    }

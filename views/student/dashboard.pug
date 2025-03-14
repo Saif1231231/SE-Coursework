@@ -1,0 +1,49 @@
+extends ../layout
+
+block content
+  .container.py-5
+    .text-center.mb-5
+      h1.display-4 UniShared
+      p.lead Student Dashboard
+    
+    .row.justify-content-center
+      .col-md-6
+        .card.mb-4
+          .card-body
+            .d-grid.gap-3
+              a.btn.btn-dark.btn-lg(href="/student/transport") 
+                i.fas.fa-car.me-2
+                | Transport
+              a.btn.btn-dark.btn-lg(href="/student/bookings")
+                i.fas.fa-ticket.me-2
+                | My Bookings
+              a.btn.btn-dark.btn-lg(href="/student/profile")
+                i.fas.fa-user.me-2
+                | My Profile
+
+  style.
+    .card {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .btn-lg {
+      padding: 15px;
+      font-size: 1.1rem;
+    }
+    .btn-dark {
+      background-color: #000;
+      border-color: #000;
+    }
+    .btn-dark:hover {
+      background-color: #333;
+      border-color: #333;
+    }
+    .display-4 {
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    .lead {
+      color: #666;
+      margin-bottom: 2rem;
+    } 

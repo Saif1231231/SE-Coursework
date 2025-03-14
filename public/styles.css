@@ -179,4 +179,87 @@ select#rating {
 .ride-status.cancelled {
   background: #ffebee;
   color: #c62828;
+}
+
+/* General Layout */
+body {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+/* User Selection Buttons */
+.user-selection {
+  max-width: 400px;
+  margin: 30px auto;
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  margin: 10px 0;
+  text-align: center;
+  border-radius: 5px;
+  background: #007bff;
+  color: white;
+  text-decoration: none;
+  border: none;
+}
+
+.btn-block:hover {
+  background: #0056b3;
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Dashboard Options */
+.admin-options,
+.driver-options,
+.dashboard-options {
+  max-width: 400px;
+  margin: 20px auto;
+}
+
+/* Transport Form */
+.transport-form {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.available-rides {
+  margin-top: 20px;
+}
+
+.ride-option {
+  padding: 15px;
+  margin: 10px 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 } 

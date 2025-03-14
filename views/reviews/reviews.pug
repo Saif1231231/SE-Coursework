@@ -1,65 +1,122 @@
 extends ../layout
 
 block content
-  h1 Reviews
+  style.
+    .reviews-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .review-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    .review-header {
+      margin-bottom: 15px;
+    }
+    .review-route {
+      font-size: 1.2em;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    .rating {
+      font-size: 1.2em;
+      margin: 10px 0;
+    }
+    .review-comment {
+      margin: 15px 0;
+      font-style: italic;
+      color: #555;
+    }
+    .review-info {
+      color: #666;
+      font-size: 0.9em;
+    }
+    .review-form-container {
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background-color: #f8f9fa;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    textarea.form-control {
+      resize: vertical;
+    }
+
+  h1.text-center Reviews
   
   if reviews && reviews.length
-    div.reviews-list
+    div.reviews-container
       each review in reviews
         div.review-card
           div.review-header
-            h3 #{review.pickup_location} to #{review.dropoff_location}
-            p.review-date= new Date(review.created_at).toLocaleString()
-          div.review-content
-            p
-              strong Rating: 
-              span.rating ⭐ #{review.rating}/5
-            p
-              strong Passenger: 
-              span= review.passenger_name
-            p
-              strong Driver: 
-              span= review.driver_name
-            p.review-text= review.comment
+            div.review-route #{review.pickup_location || 'Unknown'} → #{review.dropoff_location || 'Unknown'}
+            div.rating
+              - var rating = parseInt(review.rating) || 0
+              - var stars = '⭐'.repeat(rating)
+              | #{stars} (#{rating}/5)
+          if review.comment
+            p.review-comment "#{review.comment}"
+          div.review-info
+            p From #{review.passenger_name || 'Anonymous'} to #{review.driver_name || 'Anonymous'}
+            p.text-muted= new Date(review.created_at).toLocaleString() || 'Unknown date'
+  else
+    p.text-center.text-muted No reviews found.
 
-  form.review-form(action="/reviews/create" method="POST")
-    h2 Write a Review
-    div.form-group
-      label(for="rating") Rating:
-      select(name="rating" required)
-        option(value="") Select rating
-        option(value="1") 1 ⭐
-        option(value="2") 2 ⭐
-        option(value="3") 3 ⭐
-        option(value="4") 4 ⭐
-        option(value="5") 5 ⭐
+  div.review-form-container
+    h2.text-center Write a Review
+    form.review-form(action="/reviews/create" method="POST")
+      div.form-group
+        label(for="rating") Rating:
+        select.form-control(name="rating" id="rating" required)
+          option(value="") Select rating
+          option(value="1") ⭐
+          option(value="2") ⭐⭐
+          option(value="3") ⭐⭐⭐
+          option(value="4") ⭐⭐⭐⭐
+          option(value="5") ⭐⭐⭐⭐⭐
 
-    div.form-group
-      label(for="review") Your Review:
-      textarea(name="review" required)
+      div.form-group
+        label(for="review") Your Review:
+        textarea.form-control(name="review" id="review" rows="3" placeholder="Write your review here..." required)
 
-    div.form-group
-      label(for="rideId") Ride:
-      select(name="rideId" required)
-        option(value="") Select a ride
-        each ride in rides
-          option(value=ride.ride_id) #{ride.pickup_location} to #{ride.dropoff_location}
+      div.form-group
+        label(for="rideId") Ride:
+        select.form-control(name="rideId" id="rideId" required)
+          option(value="") Select a ride
+          each ride in rides
+            option(value=ride.ride_id) #{ride.pickup_location} → #{ride.dropoff_location}
 
-    div.form-group
-      label(for="passengerId") Passenger:
-      select(name="passengerId" required)
-        option(value="") Select a passenger
-        each passenger in passengers
-          option(value=passenger.passenger_id) #{passenger.name}
+      div.form-group
+        label(for="passengerId") Passenger:
+        select.form-control(name="passengerId" id="passengerId" required)
+          option(value="") Select a passenger
+          each passenger in passengers
+            option(value=passenger.passenger_id) #{passenger.name}
 
-    div.form-group
-      label(for="driverId") Driver:
-      select(name="driverId" required)
-        option(value="") Select a driver
-        each driver in drivers
-          option(value=driver.driver_id) #{driver.name}
+      div.form-group
+        label(for="driverId") Driver:
+        select.form-control(name="driverId" id="driverId" required)
+          option(value="") Select a driver
+          each driver in drivers
+            option(value=driver.driver_id) #{driver.name}
 
-    button.btn.btn-primary(type="submit") Submit Review
+      div.text-center
+        button.btn.btn-primary.btn-lg(type="submit") Submit Review
 
-  div.button-container
+  div.text-center.mt-4
     a.btn.btn-secondary(href="/") Back to Home 

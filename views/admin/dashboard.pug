@@ -1,0 +1,44 @@
+extends ../layout
+
+block content
+    style.
+        .card {
+            height: 100%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card-body {
+            display: flex;
+            flex-direction: column;
+        }
+        .card-text {
+            flex-grow: 1;
+            margin-bottom: 1rem;
+        }
+        .btn {
+            align-self: flex-start;
+        }
+
+    .container.mt-4
+        h1.mb-4.text-center UniShared
+        h3.mb-4.text-center Admin Dashboard
+        .row
+            .col-md-4.mb-4
+                .card
+                    .card-body
+                        h5.card-title Verify Users
+                        p.card-text Review and verify new UniShared user registrations
+                        a.btn.btn-primary(href='/admin/verify-user') Go to Verify Users
+            
+            .col-md-4.mb-4
+                .card
+                    .card-body
+                        h5.card-title Suspend Users
+                        p.card-text Manage UniShared user access to the platform
+                        a.btn.btn-primary(href='/admin/suspend') Go to Suspend Users
+            
+            .col-md-4.mb-4
+                .card
+                    .card-body
+                        h5.card-title Resolve Disputes
+                        p.card-text Handle disputes between UniShared drivers and passengers
+                        a.btn.btn-primary(href='/admin/resolve') Go to Resolve Disputes

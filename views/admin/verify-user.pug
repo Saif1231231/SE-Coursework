@@ -1,0 +1,47 @@
+extends ../layout
+
+block content
+    style.
+        .badge {
+            padding: 8px 12px;
+            font-size: 0.9em;
+        }
+        .table th {
+            background-color: #f8f9fa;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+    .container.mt-4
+        h1.mb-4.text-center UniShared
+        h3.mb-4.text-center Verify Users
+        if message
+            .alert.alert-info= message
+        
+        if users && users.length > 0
+            .table-responsive
+                table.table.table-striped
+                    thead
+                        tr
+                            th Name
+                            th Email
+                            th Phone
+                            th Type
+                            th Created At
+                            th(style="width: 150px") Actions
+                    tbody
+                        each user in users
+                            tr
+                                td= user.name
+                                td= user.email
+                                td= user.phone
+                                td
+                                    span.badge(class=user.type === 'driver' ? 'bg-primary' : 'bg-success')= user.type
+                                td= new Date(user.created_at).toLocaleDateString()
+                                td
+                                    form(method='POST' action=`/admin/verify-user/${user.type}/${user.user_id}` style='display: inline')
+                                        button.btn.btn-success.btn-sm(type='submit') Verify
+        else
+            .alert.alert-info No unverified users found. 
