@@ -1,3 +1,50 @@
+/* Define color variables for easy maintenance */
+:root {
+  --black: #000000;
+  --white: #FFFFFF;
+  --blue: #007BFF;
+  --light-red: #FFEBEE;
+  --light-blue: #B0C4DE;
+  --success-light-blue: #E0F7FA;
+}
+
+/* General styles */
+body {
+  background-color: var(--white);
+  color: var(--black);
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+/* Button styles */
+.button-primary {
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+.button-secondary {
+  background-color: var(--light-blue);
+  color: var(--black);
+}
+
+/* Message styles */
+.success-message {
+  background-color: var(--success-light-blue);
+  color: var(--black);
+}
+
+.error-message {
+  background-color: var(--light-red);
+  color: var(--black);
+}
+
+/* Links and interactive elements */
+a, .interactive {
+  color: var(--blue);
+}
+
 /* Review Styles */
 .review-card {
   background: #f8f9fa;
@@ -179,14 +226,6 @@ select#rating {
 .ride-status.cancelled {
   background: #ffebee;
   color: #c62828;
-}
-
-/* General Layout */
-body {
-  padding: 20px;
-  max-width: 800px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
 }
 
 h1 {
