@@ -1,11 +1,11 @@
 /* Define color variables for easy maintenance */
 :root {
-  --black: #000000;
-  --white: #FFFFFF;
-  --blue: #007BFF;
-  --light-red: #FFEBEE;
-  --light-blue: #B0C4DE;
-  --success-light-blue: #E0F7FA;
+  --black: #2C3E50;  /* Dark blue-gray for text */
+  --white: #F8F9FA;  /* Light gray for background */
+  --blue: #3498db;   /* Blue for primary actions */
+  --light-red: #FADBD8;  /* Light red for error messages */
+  --light-blue: #AED6F1;  /* Light blue for secondary buttons */
+  --success-light-blue: #D5F5E3;  /* Light green for success messages */
 }
 
 /* General styles */
