@@ -1,0 +1,45 @@
+extends layout
+
+block content
+  h1 Post a New Ride
+  form(method="POST" action="/rides/create")
+    div.form-group
+      label(for="driverID") Driver ID:
+      input(type="number" name="driverID" required)
+
+    div.form-group
+      label(for="pickupLocation") Pickup Location:
+      input(type="text" name="pickupLocation" required)
+
+    div.form-group
+      label(for="destination") Destination:
+      input(type="text" name="destination" required)
+
+    div.form-group
+      label(for="departureTime") Departure Time:
+      input#departureTime(type="text" name="departureTime" required style="width: 200px;")
+      span.text-muted(style="margin-left: 10px;") Format: YYYY-MM-DD HH:mm
+
+    div.form-group
+      label(for="seatsAvailable") Seats Available:
+      input(type="number" name="seatsAvailable" required)
+
+    div.form-group
+      label(for="price") Price (£):
+      input(type="number" step="0.01" name="price" required)
+
+    button.btn.btn-primary(type="submit") Submit Ride
+  a.btn.btn-secondary(href="/rides") Back to Rides
+
+  style.
+    input#departureTime {
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      appearance: none !important;
+      background: white !important;
+    }
+    input#departureTime::-webkit-inner-spin-button,
+    input#departureTime::-webkit-outer-spin-button {
+      -webkit-appearance: none !important;
+      margin: 0 !important;
+    }

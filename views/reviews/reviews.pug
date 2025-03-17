@@ -1,0 +1,125 @@
+extends ../layout
+
+block content
+  style.
+    .reviews-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .review-card {
+      margin-bottom: 20px;
+      background: white;
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+    }
+    .review-header {
+      margin-bottom: 10px;
+    }
+    .review-route {
+      font-size: 1.1em;
+      color: #333;
+    }
+    .rating {
+      font-size: 1.1em;
+      margin: 5px 0;
+    }
+    .review-comment {
+      margin: 10px 0;
+      font-style: italic;
+      color: #555;
+    }
+    .review-info {
+      color: #666;
+      font-size: 0.9em;
+    }
+    .review-form-container {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 15px;
+      background-color: #f8f9fa;
+    }
+    .form-group {
+      margin-bottom: 10px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    textarea.form-control {
+      resize: vertical;
+    }
+    /* Simplified table styles */
+    .simple-select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #eee;
+      background-color: white;
+      border-radius: 4px;
+    }
+
+  h1.text-center Reviews
+  
+  if reviews && reviews.length
+    div.reviews-container
+      each review in reviews
+        div.review-card
+          div.review-header
+            div.review-route #{review.pickup_location || 'Unknown'} to #{review.dropoff_location || 'Unknown'}
+            div.rating
+              - var rating = parseInt(review.rating) || 0
+              - var stars = '⭐'.repeat(rating)
+              | #{stars} (#{rating}/5)
+          if review.comment
+            p.review-comment "#{review.comment}"
+          div.review-info
+            p From #{review.passenger_name || 'Anonymous'} to #{review.driver_name || 'Anonymous'}
+            p.text-muted= new Date(review.created_at).toLocaleString() || 'Unknown date'
+  else
+    p.text-center.text-muted No reviews found.
+
+  div.review-form-container
+    h2.text-center Write a Review
+    form.review-form(action="/reviews/create" method="POST")
+      div.form-group
+        label(for="rating") Rating:
+        select.simple-select(name="rating" id="rating" required)
+          option(value="") Select rating
+          option(value="1") ⭐
+          option(value="2") ⭐⭐
+          option(value="3") ⭐⭐⭐
+          option(value="4") ⭐⭐⭐⭐
+          option(value="5") ⭐⭐⭐⭐⭐
+
+      div.form-group
+        label(for="review") Your Review:
+        textarea.form-control(name="review" id="review" rows="3" placeholder="Write your review here..." required)
+
+      div.form-group
+        label(for="rideId") Ride:
+        select.simple-select(name="rideId" id="rideId" required)
+          option(value="") Select a ride
+          each ride in rides
+            option(value=ride.ride_id) #{ride.pickup_location} to #{ride.dropoff_location}
+
+      div.form-group
+        label(for="passengerId") Passenger:
+        select.simple-select(name="passengerId" id="passengerId" required)
+          option(value="") Select a passenger
+          each passenger in passengers
+            option(value=passenger.passenger_id) #{passenger.name}
+
+      div.form-group
+        label(for="driverId") Driver:
+        select.simple-select(name="driverId" id="driverId" required)
+          option(value="") Select a driver
+          each driver in drivers
+            option(value=driver.driver_id) #{driver.name}
+
+      div.text-center
+        button.btn.btn-primary(type="submit") Submit Review
+
+  div.text-center.mt-4
+    a.btn.btn-secondary(href="/") Back to Home 

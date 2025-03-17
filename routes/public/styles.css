@@ -1,0 +1,143 @@
+/*  General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #FFFFFF; /* White Background */
+    color: #000000; /* Black Text */
+    text-align: center;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /*  Navigation */
+  nav {
+    background-color: #007BFF; /* Blue */
+    padding: 15px;
+  }
+  
+  nav ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  nav ul li {
+    display: inline;
+    margin: 0 15px;
+  }
+  
+  nav ul li a {
+    color: #FFFFFF; /* White Text */
+    text-decoration: none;
+    font-weight: bold;
+  }
+  
+  /*  Tables */
+  table {
+    width: 80%;
+    margin: auto;
+    border-collapse: collapse;
+    background-color: #FFFFFF;
+  }
+  
+  th, td {
+    padding: 10px;
+    border: 1px solid #000000; /* Black Borders */
+  }
+  
+  th {
+    background-color: #007BFF; /* Blue */
+    color: #FFFFFF; /* White Text */
+  }
+  
+  /* Buttons */
+  button, .btn {
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 16px;
+    display: inline-block;
+  }
+  
+  .btn-primary {
+    background-color: #007BFF; /* Blue */
+    color: #FFFFFF; /* White */
+  }
+  
+  .btn-secondary {
+    background-color: #B0C4DE; /* Light Blue */
+    color: #000000; /* Black */
+  }
+  
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #87AFC7;
+  }
+  
+  /* ✅ Alerts */
+  .alert-success {
+    background-color: #E0F7FA; /* Light Blue */
+    color: #000000; /* Black */
+    padding: 10px;
+    margin: 10px auto;
+    width: 60%;
+    border-radius: 5px;
+  }
+  
+  .alert-error {
+    background-color: #FFEBEE; /* Light Red */
+    color: #000000; /* Black */
+    padding: 10px;
+    margin: 10px auto;
+    width: 60%;
+    border-radius: 5px;
+  }
+  
+  /*  Form Styling */
+  form {
+    width: 60%;
+    margin: auto;
+    background: #FFFFFF;
+    padding: 20px;
+    border-radius: 5px;
+    border: 1px solid #000000;
+  }
+  
+  input, select, textarea {
+    width: 100%;
+    padding: 8px;
+    margin: 10px 0;
+    border: 1px solid #000000;
+    border-radius: 5px;
+  }
+  
+  input[type="submit"], button {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  /* 🔹 Centering Forms */
+form {
+  width: 50%;
+  margin: auto;
+}
+
+/* 🔹 Button Styling */
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+/* 🔹 Table Improvements */
+table {
+  width: 90%;
+  margin: auto;
+}
+
+  

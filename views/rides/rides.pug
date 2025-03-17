@@ -1,0 +1,59 @@
+extends ../layout
+
+block content
+  h1.text-center Available Rides
+  
+  div.text-center.mb-4
+    a.btn.btn-primary(href="/rides/create") + New Ride
+
+  if rides && rides.length
+    div.table-responsive
+      table.table
+        thead
+          tr
+            th From
+            th To
+            th Driver
+            th Departure
+            th Seats
+            th Price
+            th Status
+            th
+        tbody
+          each ride in rides
+            tr
+              td= ride.pickup_location
+              td= ride.dropoff_location
+              td= ride.driver_name || 'Not assigned'
+              td= ride.departureTime ? new Date(ride.departureTime).toLocaleString() : 'Not scheduled'
+              td= ride.seatsAvailable
+              td £#{ride.fare}
+              td= ride.status
+              td
+                a.btn.btn-sm.btn-primary(href=`/rides/${ride.ride_id}`) View
+  else
+    div.alert.alert-info.text-center No rides available at the moment.
+
+  div.text-center.mt-4
+    a.btn.btn-secondary(href="/") Back to Home
+
+  style.
+    .table {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin: 20px auto;
+      max-width: 1000px;
+    }
+    .table th {
+      background: #f8f9fa;
+      border-top: none;
+    }
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 0.875rem;
+    }
+    .alert {
+      max-width: 600px;
+      margin: 20px auto;
+    } 

@@ -1,0 +1,232 @@
+const express = require('express');
+const router = express.Router();
+const db = require('../services/db');
+
+// Middleware to check if driver is logged in
+const isDriverLoggedIn = (req, res, next) => {
+    if (!req.session || !req.session.userId || req.session.userType !== 'driver') {
+        return res.redirect('/login?message=Please login as a driver first');
+    }
+    next();
+};
+
+// Apply middleware to all driver routes
+router.use(isDriverLoggedIn);
+
+// Driver Dashboard
+router.get('/', (req, res) => {
+    res.render('driver/dashboard');
+});
+
+// Accept Ride Page
+router.get('/accept-ride', async (req, res) => {
+    try {
+        const [rides] = await db.query(`
+            SELECT 
+                r.*,
+                p.name as passenger_name,
+                p.phone as passenger_phone
+            FROM ride r
+            LEFT JOIN passenger p ON r.passenger_id = p.passenger_id
+            WHERE r.status = 'requested' 
+            AND r.driver_id IS NULL
+            ORDER BY r.created_at DESC
+        `);
+        
+        console.log('Available rides:', rides);
+        res.render('driver/accept-ride', { rides });
+    } catch (err) {
+        console.error('Error fetching rides:', err);
+        res.status(500).send('Database error: ' + err.message);
+    }
+});
+
+// Handle Accept Ride
+router.post('/accept-ride/:rideId', async (req, res) => {
+    try {
+        await db.query(
+            `UPDATE ride SET status = 'accepted', driver_id = ? WHERE ride_id = ?`,
+            [req.session.userId, req.params.rideId]
+        );
+        res.redirect('/driver/accept-ride');
+    } catch (err) {
+        console.error('Error accepting ride:', err);
+        res.status(500).send('Database error: ' + err.message);
+    }
+});
+
+// Cancel Ride Page
+router.get('/cancel-ride', async (req, res) => {
+    try {
+        console.log('Fetching rides for driver:', req.session.userId);
+        
+        const [rides] = await db.query(`
+            SELECT 
+                r.*,
+                p.name as passenger_name,
+                p.phone as passenger_phone
+            FROM ride r
+            LEFT JOIN passenger p ON r.passenger_id = p.passenger_id
+            WHERE r.status = 'accepted' 
+            AND r.driver_id = ?
+            ORDER BY r.created_at DESC
+        `, [req.session.userId]);
+
+        console.log('Found rides:', rides);
+
+        if (!rides) {
+            console.log('No rides found');
+            return res.render('driver/cancel-ride', { rides: [] });
+        }
+
+        res.render('driver/cancel-ride', { rides });
+    } catch (err) {
+        console.error('Error in /cancel-ride:', err);
+        res.render('driver/cancel-ride', { 
+            rides: [],
+            error: 'An error occurred while fetching rides. Please try again.'
+        });
+    }
+});
+
+// Handle Cancel Ride
+router.post('/cancel-ride/:rideId', async (req, res) => {
+    try {
+        await db.query(
+            `UPDATE ride SET status = 'cancelled', driver_id = NULL WHERE ride_id = ? AND driver_id = ?`,
+            [req.params.rideId, req.session.userId]
+        );
+        res.redirect('/driver/cancel-ride');
+    } catch (err) {
+        console.error('Error cancelling ride:', err);
+        res.status(500).send('Database error: ' + err.message);
+    }
+});
+
+// Review Ride Page
+router.get('/review-ride', async (req, res) => {
+    try {
+        // First get the rides
+        const [rides] = await db.query(`
+            SELECT 
+                r.*,
+                p.name as passenger_name,
+                p.phone as passenger_phone,
+                DATE_FORMAT(r.departureTime, '%Y-%m-%d %H:%i:%s') as formatted_departure_time
+            FROM ride r
+            LEFT JOIN passenger p ON r.passenger_id = p.passenger_id
+            WHERE r.status = 'completed' 
+            AND r.driver_id = ?
+            ORDER BY r.departureTime DESC
+        `, [req.session.userId]);
+
+        // Get reviews for these rides
+        if (rides.length > 0) {
+            const rideIds = rides.map(ride => ride.ride_id);
+            const [reviews] = await db.query(`
+                SELECT 
+                    rev.*,
+                    p.name as passenger_name,
+                    d.name as driver_name,
+                    DATE_FORMAT(rev.created_at, '%Y-%m-%d %H:%i:%s') as formatted_created_at
+                FROM review rev
+                LEFT JOIN passenger p ON rev.passenger_id = p.passenger_id
+                LEFT JOIN driver d ON rev.driver_id = d.driver_id
+                WHERE rev.ride_id IN (?)
+                ORDER BY rev.created_at DESC
+            `, [rideIds]);
+
+            // Attach reviews to their respective rides
+            rides.forEach(ride => {
+                ride.reviews = reviews.filter(review => review.ride_id === ride.ride_id);
+                ride.departureTime = ride.formatted_departure_time;
+            });
+        }
+
+        res.render('driver/review-ride', { rides });
+    } catch (err) {
+        console.error('Error fetching rides and reviews:', err);
+        res.status(500).send('Database error: ' + err.message);
+    }
+});
+
+// Handle Review Submission
+router.post('/submit-review/:rideId', async (req, res) => {
+    try {
+        const { rating, comment } = req.body;
+        const rideId = req.params.rideId;
+
+        // Validate input
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).send('Invalid rating. Must be between 1 and 5.');
+        }
+
+        // First check if this ride exists and belongs to this driver
+        const [rides] = await db.query(
+            'SELECT * FROM ride WHERE ride_id = ? AND driver_id = ? AND status = "completed"',
+            [rideId, req.session.userId]
+        );
+
+        if (!rides || rides.length === 0) {
+            return res.status(404).send('Ride not found or not completed.');
+        }
+
+        const ride = rides[0];
+        
+        // Make sure we have a passenger_id
+        if (!ride.passenger_id) {
+            return res.status(400).send('Cannot submit review: No passenger associated with this ride.');
+        }
+
+        // Check if a review already exists
+        const [existingReviews] = await db.query(
+            'SELECT * FROM review WHERE ride_id = ? AND driver_id = ?',
+            [rideId, req.session.userId]
+        );
+
+        if (existingReviews && existingReviews.length > 0) {
+            // Update existing review
+            await db.query(
+                `UPDATE review SET rating = ?, comment = ?, created_at = NOW() 
+                 WHERE ride_id = ? AND driver_id = ?`,
+                [rating, comment || null, rideId, req.session.userId]
+            );
+        } else {
+            // Insert new review
+            await db.query(
+                `INSERT INTO review (ride_id, passenger_id, driver_id, rating, comment, created_at) 
+                 VALUES (?, ?, ?, ?, ?, NOW())`,
+                [rideId, ride.passenger_id, req.session.userId, rating, comment || null]
+            );
+        }
+
+        res.redirect('/driver/review-ride');
+    } catch (err) {
+        console.error('Error submitting review:', err);
+        res.status(500).send('Database error: ' + err.message);
+    }
+});
+
+// Active Rides Page
+router.get('/active-rides', async (req, res) => {
+    try {
+        const [rides] = await db.query(`
+            SELECT 
+                r.*,
+                p.name as passenger_name,
+                p.phone as passenger_phone
+            FROM ride r
+            LEFT JOIN passenger p ON r.passenger_id = p.passenger_id
+            WHERE r.status = 'accepted' 
+            AND r.driver_id = ?
+            ORDER BY r.departureTime ASC
+        `, [req.session.userId]);
+        
+        res.render('driver/active-rides', { rides });
+    } catch (err) {
+        console.error('Error fetching active rides:', err);
+        res.status(500).send('Database error: ' + err.message);
+    }
+});
+
+module.exports = router; 

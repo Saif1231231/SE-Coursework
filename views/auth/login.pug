@@ -1,0 +1,29 @@
+extends ../layout
+
+block content
+  h1.text-center Login to UniShared
+
+  if message
+    div.alert.alert-danger= message
+
+  form.login-form(method="POST" action="/auth/login")
+    div.form-group
+      label(for="email") Email:
+      input.form-control(type="email" id="email" name="email" required)
+    
+    div.form-group
+      label(for="password") Password:
+      input.form-control(type="password" id="password" name="password" required)
+    
+    div.form-group
+      label(for="userType") Login as:
+      select.form-control(id="userType" name="userType" required)
+        option(value="" selected=!userType) Select user type
+        option(value="student" selected=userType==='student') Student
+        option(value="driver" selected=userType==='driver') Driver
+        option(value="admin" selected=userType==='admin') Admin
+    
+    button.btn.btn-primary.btn-block(type="submit") Login
+  
+  div.text-center.mt-3
+    a(href="/") Back to Home 

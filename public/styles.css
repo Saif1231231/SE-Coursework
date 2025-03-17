@@ -1,0 +1,304 @@
+/* Define color variables for easy maintenance */
+:root {
+  --black: #2C3E50;  /* Dark blue-gray for text */
+  --white: #F8F9FA;  /* Light gray for background */
+  --blue: #3498db;   /* Blue for primary actions */
+  --light-red: #FADBD8;  /* Light red for error messages */
+  --light-blue: #AED6F1;  /* Light blue for secondary buttons */
+  --success-light-blue: #D5F5E3;  /* Light green for success messages */
+}
+
+/* General styles */
+body {
+  background-color: var(--white);
+  color: var(--black);
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+
+/* Button styles */
+.button-primary {
+  background-color: var(--blue);
+  color: var(--white);
+}
+
+.button-secondary {
+  background-color: var(--light-blue);
+  color: var(--black);
+}
+
+/* Message styles */
+.success-message {
+  background-color: var(--success-light-blue);
+  color: var(--black);
+}
+
+.error-message {
+  background-color: var(--light-red);
+  color: var(--black);
+}
+
+/* Links and interactive elements */
+a, .interactive {
+  color: var(--blue);
+}
+
+/* Review Styles */
+.review-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 15px auto;
+  width: 80%;
+  max-width: 800px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.review-form {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.rating {
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+.review-text {
+  font-size: 1.1em;
+  line-height: 1.5;
+  margin: 10px 0;
+}
+
+.review-date {
+  color: #666;
+  font-size: 0.9em;
+  text-align: right;
+}
+
+textarea#comment {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+select#rating {
+  width: auto;
+  padding: 8px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.reviews-list {
+  margin-top: 40px;
+}
+
+/* Add these to your existing styles */
+
+.rides-container {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+
+.ride-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 15px 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #ddd;
+}
+
+.ride-card h3 {
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.ride-card p {
+  margin: 10px 0;
+}
+
+.ride-card strong {
+  color: #555;
+}
+
+.no-rides {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 1.2em;
+}
+
+.button-container {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.button-container .btn {
+  margin: 0 10px;
+}
+
+.ride-details-card {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 30px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.ride-details-card h2 {
+  color: #333;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.ride-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.info-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 6px;
+}
+
+.info-section h3 {
+  color: #444;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #eee;
+}
+
+.info-section p {
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+.info-section strong {
+  color: #555;
+  display: inline-block;
+  width: 120px;
+}
+
+.ride-status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.ride-status.requested {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.ride-status.accepted {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.ride-status.completed {
+  background: #f5f5f5;
+  color: #616161;
+}
+
+.ride-status.cancelled {
+  background: #ffebee;
+  color: #c62828;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+/* User Selection Buttons */
+.user-selection {
+  max-width: 400px;
+  margin: 30px auto;
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  margin: 10px 0;
+  text-align: center;
+  border-radius: 5px;
+  background: #007bff;
+  color: white;
+  text-decoration: none;
+  border: none;
+}
+
+.btn-block:hover {
+  background: #0056b3;
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Dashboard Options */
+.admin-options,
+.driver-options,
+.dashboard-options {
+  max-width: 400px;
+  margin: 20px auto;
+}
+
+/* Transport Form */
+.transport-form {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.available-rides {
+  margin-top: 20px;
+}
+
+.ride-option {
+  padding: 15px;
+  margin: 10px 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+} 

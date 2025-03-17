@@ -1,0 +1,50 @@
+extends ../layout
+
+block content
+  .container.py-5
+    .row.justify-content-center
+      .col-md-8
+        .card
+          .card-body
+            h1.display-5.mb-4.text-center My Profile
+            
+            if user
+              .profile-info
+                .mb-4
+                  label.form-label Name
+                  p.form-control= user.name
+                
+                .mb-4
+                  label.form-label Email
+                  p.form-control= user.email
+                
+                .mb-4
+                  label.form-label Phone
+                  p.form-control= user.phone
+
+                .mb-4
+                  label.form-label Account Type
+                  p.form-control Student
+                
+                .mb-4
+                  label.form-label Member Since
+                  p.form-control= new Date(user.created_at).toLocaleDateString()
+            else
+              p.text-center Please log in to view your profile.
+
+  style.
+    .card {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .form-label {
+      font-weight: 500;
+      color: #2C3E50;
+      margin-bottom: 0.5rem;
+    }
+    .form-control {
+      background-color: #F8F9FA;
+      border: 1px solid #eee;
+      color: #2C3E50;
+    } 
