@@ -1,22 +1,22 @@
 USE ridesharing;
 
--- Add verified column to passenger table
+-- Adding the verified column to passenger table
 ALTER TABLE passenger
 ADD COLUMN verified BOOLEAN DEFAULT FALSE;
 
--- Add verified column to driver table
+-- Adding the verified column to driver table
 ALTER TABLE driver
 ADD COLUMN verified BOOLEAN DEFAULT FALSE;
 
--- Add suspended column to passenger table
+-- Adding the suspended column to passenger table
 ALTER TABLE passenger
 ADD COLUMN suspended BOOLEAN DEFAULT FALSE;
 
--- Add suspended column to driver table
+-- Adding the suspended column to driver table
 ALTER TABLE driver
 ADD COLUMN suspended BOOLEAN DEFAULT FALSE;
 
--- Create dispute table
+-- Creating the dispute table
 CREATE TABLE IF NOT EXISTS dispute (
     dispute_id INT AUTO_INCREMENT PRIMARY KEY,
     ride_id INT NOT NULL,
@@ -31,18 +31,18 @@ CREATE TABLE IF NOT EXISTS dispute (
     FOREIGN KEY (driver_id) REFERENCES driver(driver_id) ON DELETE CASCADE
 );
 
--- Add some sample data
+-- Adding some sample data
 UPDATE passenger SET verified = TRUE WHERE passenger_id IN (1, 2);
 UPDATE driver SET verified = TRUE WHERE driver_id IN (1, 2);
 
--- Add a sample dispute
+-- Adding a sample dispute
 INSERT INTO dispute (ride_id, passenger_id, driver_id, description, status)
 SELECT 
     r.ride_id,
     r.passenger_id,
     r.driver_id,
-    'Driver was late by 30 minutes',
+    'The driver is late by 30 minutes',
     'pending'
 FROM ride r
-WHERE r.status = 'completed'
+WHERE r.status = 'The ride has been completed'
 LIMIT 1; 
