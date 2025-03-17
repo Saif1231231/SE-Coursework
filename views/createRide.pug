@@ -17,7 +17,8 @@ block content
 
     div.form-group
       label(for="departureTime") Departure Time:
-      input(type="datetime-local" name="departureTime" required)
+      input#departureTime(type="text" name="departureTime" required style="width: 200px;")
+      span.text-muted(style="margin-left: 10px;") Format: YYYY-MM-DD HH:mm
 
     div.form-group
       label(for="seatsAvailable") Seats Available:
@@ -29,3 +30,16 @@ block content
 
     button.btn.btn-primary(type="submit") Submit Ride
   a.btn.btn-secondary(href="/rides") Back to Rides
+
+  style.
+    input#departureTime {
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      appearance: none !important;
+      background: white !important;
+    }
+    input#departureTime::-webkit-inner-spin-button,
+    input#departureTime::-webkit-outer-spin-button {
+      -webkit-appearance: none !important;
+      margin: 0 !important;
+    }

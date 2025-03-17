@@ -8,27 +8,24 @@ block content
       padding: 20px;
     }
     .review-card {
-      border: 1px solid #ddd;
-      border-radius: 8px;
       margin-bottom: 20px;
       background: white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      padding: 20px;
+      padding: 15px;
+      border-bottom: 1px solid #eee;
     }
     .review-header {
-      margin-bottom: 15px;
-    }
-    .review-route {
-      font-size: 1.2em;
-      color: #333;
       margin-bottom: 10px;
     }
+    .review-route {
+      font-size: 1.1em;
+      color: #333;
+    }
     .rating {
-      font-size: 1.2em;
-      margin: 10px 0;
+      font-size: 1.1em;
+      margin: 5px 0;
     }
     .review-comment {
-      margin: 15px 0;
+      margin: 10px 0;
       font-style: italic;
       color: #555;
     }
@@ -38,23 +35,29 @@ block content
     }
     .review-form-container {
       max-width: 600px;
-      margin: 30px auto;
-      padding: 20px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
+      margin: 20px auto;
+      padding: 15px;
       background-color: #f8f9fa;
     }
     .form-group {
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
     .form-control {
       width: 100%;
-      padding: 8px;
+      padding: 6px;
       border: 1px solid #ddd;
       border-radius: 4px;
     }
     textarea.form-control {
       resize: vertical;
+    }
+    /* Simplified table styles */
+    .simple-select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #eee;
+      background-color: white;
+      border-radius: 4px;
     }
 
   h1.text-center Reviews
@@ -64,7 +67,7 @@ block content
       each review in reviews
         div.review-card
           div.review-header
-            div.review-route #{review.pickup_location || 'Unknown'} → #{review.dropoff_location || 'Unknown'}
+            div.review-route #{review.pickup_location || 'Unknown'} to #{review.dropoff_location || 'Unknown'}
             div.rating
               - var rating = parseInt(review.rating) || 0
               - var stars = '⭐'.repeat(rating)
@@ -82,7 +85,7 @@ block content
     form.review-form(action="/reviews/create" method="POST")
       div.form-group
         label(for="rating") Rating:
-        select.form-control(name="rating" id="rating" required)
+        select.simple-select(name="rating" id="rating" required)
           option(value="") Select rating
           option(value="1") ⭐
           option(value="2") ⭐⭐
@@ -96,27 +99,27 @@ block content
 
       div.form-group
         label(for="rideId") Ride:
-        select.form-control(name="rideId" id="rideId" required)
+        select.simple-select(name="rideId" id="rideId" required)
           option(value="") Select a ride
           each ride in rides
-            option(value=ride.ride_id) #{ride.pickup_location} → #{ride.dropoff_location}
+            option(value=ride.ride_id) #{ride.pickup_location} to #{ride.dropoff_location}
 
       div.form-group
         label(for="passengerId") Passenger:
-        select.form-control(name="passengerId" id="passengerId" required)
+        select.simple-select(name="passengerId" id="passengerId" required)
           option(value="") Select a passenger
           each passenger in passengers
             option(value=passenger.passenger_id) #{passenger.name}
 
       div.form-group
         label(for="driverId") Driver:
-        select.form-control(name="driverId" id="driverId" required)
+        select.simple-select(name="driverId" id="driverId" required)
           option(value="") Select a driver
           each driver in drivers
             option(value=driver.driver_id) #{driver.name}
 
       div.text-center
-        button.btn.btn-primary.btn-lg(type="submit") Submit Review
+        button.btn.btn-primary(type="submit") Submit Review
 
   div.text-center.mt-4
     a.btn.btn-secondary(href="/") Back to Home 
