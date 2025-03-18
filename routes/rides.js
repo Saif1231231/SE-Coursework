@@ -137,7 +137,7 @@ router.post("/create", async (req, res) => {
 // Show Single Ride Details
 router.get("/:rideId", async (req, res) => {
     try {
-        const [ride] = await db.query(
+        const [rides] = await db.query(
             `SELECT r.*, d.name as driver_name, d.vehicle_details
              FROM ride r
              LEFT JOIN driver d ON r.driver_id = d.driver_id
@@ -145,10 +145,11 @@ router.get("/:rideId", async (req, res) => {
             [req.params.rideId]
         );
         
-        if (!ride) {
+        if (!rides || rides.length === 0) {
             return res.status(404).render("404");
         }
         
+        const ride = rides[0]; // Get the first (and should be only) ride
         res.render("rides/rideDetails", { ride });
     } catch (err) {
         console.error("Error fetching ride details:", err);

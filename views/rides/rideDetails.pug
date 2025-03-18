@@ -29,7 +29,7 @@ block content
           span £#{ride.fare}
         p
           strong Status: 
-          span.ride-status(class=ride.status.toLowerCase())= ride.status
+          span.ride-status(class=ride.status ? ride.status.toLowerCase() : '')= ride.status || 'Unknown'
     
     div.button-container
       a.btn.btn-secondary(href="/rides") Back to Rides 

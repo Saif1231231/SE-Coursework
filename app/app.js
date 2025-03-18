@@ -14,11 +14,6 @@ app.use(express.static(path.join(__dirname, "../public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-<<<<<<< HEAD
-// Create a route for root - /
-app.get("/", function(req, res) {
-    res.send("Hello Eman");
-=======
 // Session setup
 app.use(session({
     secret: 'your-secret-key',
@@ -49,7 +44,6 @@ app.use("/driver", driverRoutes);
 // ✅ Home Page Route
 app.get("/", (req, res) => {
     res.render("home");
->>>>>>> 5d470f699e058748f1ca3b9f4a3a2395858a819d
 });
 
 // ✅ Test Database Route (for debugging)
