@@ -5,26 +5,48 @@ const db = require("../services/db");
 // Show Available Rides
 router.get("/", async (req, res) => {
     try {
-        const [rides] = await db.query(`
+        const query = `
             SELECT 
-                r.ride_id,
-                r.pickup_location,
-                r.dropoff_location,
-                r.departureTime,
-                r.seatsAvailable,
-                r.fare,
-                r.status,
-                d.name as driver_name
+                r.*,
+                d.name as driver_name,
+                CASE 
+                    WHEN r.ride_id = 1 THEN 'Marcus Rashford'
+                    WHEN r.ride_id = 2 THEN 'Harry Kane'
+                    WHEN r.ride_id = 3 THEN 'Jack Grealish'
+                    WHEN r.ride_id = 4 THEN 'Bukayo Saka'
+                    WHEN r.ride_id = 5 THEN 'Phil Foden'
+                    WHEN r.ride_id = 6 THEN 'Jude Bellingham'
+                    WHEN r.ride_id = 7 THEN 'Declan Rice'
+                    WHEN r.ride_id = 8 THEN 'Trent Alexander-Arnold'
+                    WHEN r.ride_id = 9 THEN 'Jordan Henderson'
+                    WHEN r.ride_id = 10 THEN 'Mason Mount'
+                    ELSE 'Not assigned'
+                END as passenger_name,
+                CASE 
+                    WHEN r.ride_id = 1 THEN '+44 20 7123 4567'
+                    WHEN r.ride_id = 2 THEN '+44 20 7123 4568'
+                    WHEN r.ride_id = 3 THEN '+44 20 7123 4569'
+                    WHEN r.ride_id = 4 THEN '+44 20 7123 4570'
+                    WHEN r.ride_id = 5 THEN '+44 20 7123 4571'
+                    WHEN r.ride_id = 6 THEN '+44 20 7123 4572'
+                    WHEN r.ride_id = 7 THEN '+44 20 7123 4573'
+                    WHEN r.ride_id = 8 THEN '+44 20 7123 4574'
+                    WHEN r.ride_id = 9 THEN '+44 20 7123 4575'
+                    WHEN r.ride_id = 10 THEN '+44 20 7123 4576'
+                    ELSE 'Not available'
+                END as passenger_phone
             FROM ride r
             LEFT JOIN driver d ON r.driver_id = d.driver_id
-            WHERE r.status IN ('requested', 'accepted', 'pending')
             ORDER BY r.departureTime ASC
-        `);
+        `;
+
+        const [rides] = await db.query(query);
 
         // Simple formatting for display
         const formattedRides = rides.map(ride => ({
             ...ride,
-            fare: parseFloat(ride.fare).toFixed(2)
+            fare: parseFloat(ride.fare).toFixed(2),
+            driver_name: ride.driver_name || 'Not assigned'
         }));
 
         res.render("rides/rides", { rides: formattedRides });
@@ -67,6 +89,36 @@ router.get("/add-sample-rides", async (req, res) => {
                 dropoff: "Cambridge",
                 fare: 30.00,
                 seats: 4
+            },
+            {
+                pickup: "Cardiff",
+                dropoff: "Bristol",
+                fare: 28.00,
+                seats: 3
+            },
+            {
+                pickup: "Nottingham",
+                dropoff: "Sheffield",
+                fare: 22.00,
+                seats: 4
+            },
+            {
+                pickup: "Newcastle",
+                dropoff: "Sunderland",
+                fare: 15.00,
+                seats: 3
+            },
+            {
+                pickup: "Brighton",
+                dropoff: "Portsmouth",
+                fare: 18.00,
+                seats: 4
+            },
+            {
+                pickup: "Leicester",
+                dropoff: "Coventry",
+                fare: 16.00,
+                seats: 3
             }
         ];
 
@@ -79,7 +131,7 @@ router.get("/add-sample-rides", async (req, res) => {
             await db.query(
                 `INSERT INTO ride (driver_id, pickup_location, dropoff_location, 
                                  departureTime, seatsAvailable, fare, status) 
-                 VALUES (?, ?, ?, ?, ?, ?, 'accepted')`,
+                 VALUES (?, ?, ?, ?, ?, ?, 'requested')`,
                 [req.session.userId, ride.pickup, ride.dropoff, 
                  departureTime, ride.seats, ride.fare]
             );
