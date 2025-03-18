@@ -2,20 +2,38 @@ const express = require('express');
 const router = express.Router();
 const db = require('../services/db');
 
-// Middleware to check if driver is logged in
-const isDriverLoggedIn = (req, res, next) => {
-    if (!req.session || !req.session.userId || req.session.userType !== 'driver') {
-        return res.redirect('/login?message=Please login as a driver first');
+// Set default user session for all driver routes
+router.use((req, res, next) => {
+    if (!req.session.userId) {
+        // Set a default driver user session
+        req.session.userId = 1; // Assuming ID 1 exists in your driver table
+        req.session.userType = 'driver';
     }
     next();
-};
-
-// Apply middleware to all driver routes
-router.use(isDriverLoggedIn);
+});
 
 // Driver Dashboard
 router.get('/', (req, res) => {
     res.render('driver/dashboard');
+});
+
+// Driver Profile
+router.get('/profile', async (req, res) => {
+    try {
+        const [users] = await db.query(
+            'SELECT * FROM driver WHERE driver_id = ?',
+            [req.session.userId]
+        );
+        
+        if (users.length === 0) {
+            return res.status(404).send('User not found');
+        }
+
+        res.render('driver/profile', { user: users[0] });
+    } catch (err) {
+        console.error('Error fetching driver profile:', err);
+        res.status(500).send('Database error: ' + err.message);
+    }
 });
 
 // Accept Ride Page

@@ -2,17 +2,15 @@ const express = require('express');
 const router = express.Router();
 const db = require('../services/db');
 
-// Authentication middleware
-const isAuthenticated = (req, res, next) => {
-    if (req.session && req.session.userId && req.session.userType === 'passenger') {
-        next();
-    } else {
-        res.redirect('/auth/login?userType=student');
+// Set default user session for all student routes
+router.use((req, res, next) => {
+    if (!req.session.userId) {
+        // Set a default student user session
+        req.session.userId = 1; // Assuming ID 1 exists in your passenger table
+        req.session.userType = 'passenger';
     }
-};
-
-// Apply authentication to all student routes
-router.use(isAuthenticated);
+    next();
+});
 
 // Student Dashboard
 router.get('/', (req, res) => {

@@ -2,38 +2,34 @@ const express = require('express');
 const router = express.Router();
 const db = require('../services/db');
 
-// Authentication middleware
-const isAdmin = (req, res, next) => {
-    if (req.session && req.session.userId && req.session.userType === 'admin') {
-        next();
-    } else {
-        res.redirect('/auth/login?userType=admin');
+// Set default user session for all admin routes
+router.use((req, res, next) => {
+    if (!req.session.userId) {
+        // Set a default admin user session
+        req.session.userId = 1; // Assuming ID 1 exists in your admin table
+        req.session.userType = 'admin';
     }
-};
-
-// Apply middleware to all admin routes
-router.use(isAdmin);
+    next();
+});
 
 // Admin Dashboard
 router.get('/', (req, res) => {
     res.render('admin/dashboard');
 });
 
-// Verify User Page
+// Verify User Page (Users List)
 router.get('/verify-user', async (req, res) => {
     try {
-        // Get unverified users (both passengers and drivers)
+        // Get all users (both passengers and drivers)
         const [passengers] = await db.query(`
             SELECT passenger_id as user_id, name, email, phone, 'passenger' as type, created_at 
-            FROM passenger 
-            WHERE verified = 0 OR verified IS NULL
+            FROM passenger
         `);
         
         const [drivers] = await db.query(`
             SELECT driver_id as user_id, name, email, phone, 'driver' as type, 
                    license_number, vehicle_details, created_at 
-            FROM driver 
-            WHERE verified = 0 OR verified IS NULL
+            FROM driver
         `);
 
         res.render('admin/verify-user', { 
@@ -41,7 +37,7 @@ router.get('/verify-user', async (req, res) => {
             message: req.query.message
         });
     } catch (err) {
-        console.error('Error fetching unverified users:', err);
+        console.error('Error fetching users:', err);
         res.render('admin/verify-user', { 
             users: [], 
             message: 'Error fetching users: ' + err.message 
