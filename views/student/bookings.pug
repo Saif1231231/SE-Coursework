@@ -23,7 +23,7 @@ block content
                     span= new Date(booking.departureTime).toLocaleTimeString()
                   p.mb-2
                     strong Status: 
-                    span.badge.bg-primary= booking.status
+                    span.badge.bg-primary= booking.booking_status || booking.ride_status
                   p.mb-2
                     strong Price: 
                     span £#{booking.fare}

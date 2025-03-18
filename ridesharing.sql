@@ -160,21 +160,21 @@ INSERT INTO driver (name, email, phone, password_hash, license_number, vehicle_d
 
 -- Insert sample rides
 INSERT INTO ride (driver_id, pickup_location, dropoff_location, departureTime, fare, status, seatsAvailable) VALUES
-(1, 'London Euston', 'Manchester Piccadilly', DATE_ADD(NOW(), INTERVAL 1 DAY), 45.00, 'accepted', 4),
-(2, 'Birmingham New Street', 'Leeds Station', DATE_ADD(NOW(), INTERVAL 2 DAY), 35.00, 'accepted', 3),
-(3, 'Edinburgh Waverley', 'Glasgow Central', DATE_ADD(NOW(), INTERVAL 1 DAY), 25.00, 'accepted', 4),
-(4, 'Liverpool Lime Street', 'Manchester Victoria', DATE_ADD(NOW(), INTERVAL 3 DAY), 20.00, 'accepted', 3),
-(1, 'Oxford City Centre', 'Cambridge Station', DATE_ADD(NOW(), INTERVAL 2 DAY), 30.00, 'accepted', 4),
-(2, 'Bristol Temple Meads', 'Cardiff Central', DATE_ADD(NOW(), INTERVAL 1 DAY), 28.00, 'accepted', 3),
-(3, 'Newcastle Central', 'Durham Station', DATE_ADD(NOW(), INTERVAL 2 DAY), 15.00, 'accepted', 4),
-(4, 'Southampton Central', 'Portsmouth & Southsea', DATE_ADD(NOW(), INTERVAL 1 DAY), 12.00, 'accepted', 3),
-(1, 'Brighton Station', 'London Victoria', DATE_ADD(NOW(), INTERVAL 3 DAY), 25.00, 'accepted', 4),
-(2, 'Nottingham Station', 'Sheffield Station', DATE_ADD(NOW(), INTERVAL 2 DAY), 22.00, 'accepted', 3);
+(NULL, 'Roehampton University', 'Putney', DATE_ADD(NOW(), INTERVAL 1 DAY), 45.00, 'requested', 4),
+(NULL, 'Putney', 'Roehampton University', DATE_ADD(NOW(), INTERVAL 2 DAY), 35.00, 'requested', 3),
+(3, 'Roehampton University', 'Croydon', DATE_ADD(NOW(), INTERVAL 1 DAY), 25.00, 'accepted', 4),
+(4, 'Clapham Junction', 'Roehampton University', DATE_ADD(NOW(), INTERVAL 3 DAY), 20.00, 'accepted', 3),
+(NULL, 'Roehampton University', 'Norbury', DATE_ADD(NOW(), INTERVAL 2 DAY), 30.00, 'requested', 4),
+(2, 'Wandsworth Common', 'Roehampton University', DATE_ADD(NOW(), INTERVAL 1 DAY), 28.00, 'accepted', 3),
+(NULL, 'Roehampton University', 'Putney Bridge', DATE_ADD(NOW(), INTERVAL 2 DAY), 15.00, 'requested', 4),
+(4, 'Wimbledon', 'Roehampton University', DATE_ADD(NOW(), INTERVAL 1 DAY), 12.00, 'accepted', 3),
+(NULL, 'Roehampton University', 'Balham', DATE_ADD(NOW(), INTERVAL 3 DAY), 25.00, 'requested', 4),
+(2, 'East Croydon', 'Roehampton University', DATE_ADD(NOW(), INTERVAL 2 DAY), 22.00, 'accepted', 3);
 
 -- Insert some completed rides with reviews
 INSERT INTO ride (driver_id, passenger_id, pickup_location, dropoff_location, departureTime, fare, status, seatsAvailable) VALUES
-(1, 1, 'Manchester United Stadium', 'Manchester City Centre', DATE_SUB(NOW(), INTERVAL 1 DAY), 25.00, 'completed', 3),
-(2, 2, 'Tottenham Stadium', 'London Bridge', DATE_SUB(NOW(), INTERVAL 2 DAY), 30.00, 'completed', 2);
+(1, 1, 'Roehampton University', 'Mitcham Junction', DATE_SUB(NOW(), INTERVAL 1 DAY), 25.00, 'completed', 3),
+(2, 2, 'London Waterloo', 'Roehampton University', DATE_SUB(NOW(), INTERVAL 2 DAY), 30.00, 'completed', 2);
 
 -- Insert reviews for completed rides
 INSERT INTO review (ride_id, passenger_id, driver_id, rating, comment) VALUES

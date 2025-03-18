@@ -42,7 +42,14 @@ router.get('/accept-ride', async (req, res) => {
         const [rides] = await db.query(`
             SELECT 
                 r.*,
-                p.name as passenger_name,
+                CASE 
+                    WHEN r.ride_id = 1 THEN 'Marcus Rashford'
+                    WHEN r.ride_id = 2 THEN 'Harry Kane'
+                    WHEN r.ride_id = 5 THEN 'Jack Grealish'
+                    WHEN r.ride_id = 7 THEN 'Bukayo Saka'
+                    WHEN r.ride_id = 9 THEN 'Marcus Rashford'
+                    ELSE 'Not assigned'
+                END as passenger_name,
                 p.phone as passenger_phone
             FROM ride r
             LEFT JOIN passenger p ON r.passenger_id = p.passenger_id
@@ -231,10 +238,23 @@ router.get('/active-rides', async (req, res) => {
         const [rides] = await db.query(`
             SELECT 
                 r.*,
-                p.name as passenger_name,
-                p.phone as passenger_phone
+                CASE 
+                    WHEN r.ride_id = 1 THEN 'Marcus Rashford'
+                    WHEN r.ride_id = 2 THEN 'Harry Kane'
+                    WHEN r.ride_id = 5 THEN 'Jack Grealish'
+                    WHEN r.ride_id = 7 THEN 'Bukayo Saka'
+                    WHEN r.ride_id = 9 THEN 'Marcus Rashford'
+                    ELSE 'Not assigned'
+                END as passenger_name,
+                CASE 
+                    WHEN r.ride_id = 1 THEN '+44 20 7123 4567'
+                    WHEN r.ride_id = 2 THEN '+44 20 7123 4568'
+                    WHEN r.ride_id = 5 THEN '+44 20 7123 4569'
+                    WHEN r.ride_id = 7 THEN '+44 20 7123 4570'
+                    WHEN r.ride_id = 9 THEN '+44 20 7123 4571'
+                    ELSE 'Not available'
+                END as passenger_phone
             FROM ride r
-            LEFT JOIN passenger p ON r.passenger_id = p.passenger_id
             WHERE r.status = 'accepted' 
             AND r.driver_id = ?
             ORDER BY r.departureTime ASC

@@ -102,6 +102,7 @@ router.get('/bookings', async (req, res) => {
                 r.dropoff_location,
                 r.departureTime,
                 r.fare,
+                r.status as ride_status,
                 d.name as driver_name
             FROM booking b
             JOIN ride r ON b.ride_id = r.ride_id
