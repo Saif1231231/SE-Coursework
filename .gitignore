@@ -1,0 +1,27 @@
+# Dependency directories
+node_modules/
+
+# Database files
+db/
+
+# Environment variables
+.env
+
+# IDE and system files
+.DS_Store
+.idea/
+.vscode/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Docker
+docker-compose.override.yml 

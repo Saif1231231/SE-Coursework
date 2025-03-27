@@ -64,7 +64,7 @@ app.use((req, res) => {
 });
 
 // ✅ Start Server Only if DB is Connected
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3002;
 db.query("SELECT 1") // Check DB connection
   .then(() => {
     app.listen(PORT, () => {

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../services/db');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // Temporary debug route
 router.get('/debug/users', async (req, res) => {

@@ -1,20 +1,22 @@
 # Base image to use
-FROM node:latest
+FROM node:18
 
-# seting a working directory
+# setting a working directory
 WORKDIR /src
 
 # Copying across project configuration information
-# Installing application dependencies
 COPY package*.json /src/
 
-# Asking the npm to install the dependencies
-RUN npm install -g supervisor && npm install && npm install supervisor
+# Clean install dependencies in the container
+RUN npm install -g supervisor && npm install
 
 # Copying across all our files
 COPY . /src
 
-# Expose our application port (3000)
-EXPOSE 3000
+# Remove any existing node_modules that might have been copied from host
+RUN rm -rf node_modules && npm install
+
+# Expose our application port (3002)
+EXPOSE 3002
 
 
