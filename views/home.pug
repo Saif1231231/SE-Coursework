@@ -1,0 +1,102 @@
+extends layout
+
+block content
+  .container.min-vh-100.d-flex.align-items-center.justify-content-center
+    .text-center
+      h1.display-4.mb-4 UniShared
+      p.lead.mb-5 Your University Ridesharing Solution
+      
+      if user
+        .row.justify-content-center
+          .col-md-8.col-lg-6
+            .card.p-4.p-md-5.shadow
+              h2.display-6.mb-4.text-center Welcome back, #{user.name}!
+              p.lead.text-center.mb-4 What would you like to do today?
+              .d-grid.gap-3.mt-4
+                if user.type === 'passenger'
+                  a.btn.btn-primary.btn-lg(href="/student/transport") Transport
+                  a.btn.btn-primary.btn-lg(href="/student/bookings") My Bookings
+                  a.btn.btn-primary.btn-lg(href="/student/favorites") Saved Routes
+                else if user.type === 'driver'
+                  a.btn.btn-primary.btn-lg(href="/driver") Driver Dashboard
+                  a.btn.btn-primary.btn-lg(href="/driver/rides/create") Offer a Ride
+                else if user.type === 'admin'
+                  a.btn.btn-primary.btn-lg(href="/admin") Admin Dashboard
+                
+                a.btn.btn-outline-primary.btn-lg(href="/profile") My Profile
+                a.btn.btn-outline-secondary.btn-lg(href="/auth/logout") Log Out
+      else
+        .row.justify-content-center
+          .col-md-8.col-lg-6
+            .card.p-4.p-md-5.shadow
+              h2.display-6.mb-4.text-center Welcome to UniShared
+              p.lead.text-center.mb-4 Your university ridesharing solution
+              .d-grid.gap-3.mt-4
+                a.btn.btn-primary.btn-lg(href="/auth/login?userType=student") Login as Student
+                a.btn.btn-primary.btn-lg(href="/auth/login?userType=driver") Login as Driver
+                a.btn.btn-primary.btn-lg(href="/auth/login?userType=admin") Login as Admin
+
+  style.
+    .btn-lg {
+      padding: 20px 30px;
+      font-size: 1.4rem;
+      width: 100%;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      margin-bottom: 1.2rem;
+      text-align: center;
+      justify-content: center;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .btn-lg:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+    }
+    .btn-lg:active {
+      transform: translateY(1px);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      border: none;
+    }
+    .btn-outline-primary {
+      border-width: 2px;
+    }
+    .btn-outline-secondary {
+      border-width: 2px;
+    }
+    .display-4 {
+      font-size: 4rem;
+      font-weight: 700;
+      color: #2C3E50;
+      margin-bottom: 1.5rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    .display-6 {
+      color: #2C3E50;
+      font-weight: 600;
+    }
+    .lead {
+      font-size: 1.6rem;
+      color: #2C3E50;
+      margin-bottom: 3rem;
+    }
+    .card {
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      border: none;
+      background: #fff;
+    }
+    .card-body {
+      padding: 2rem;
+    }
+    .gap-3 {
+      gap: 1.5rem !important;
+    }
+    body {
+      background: linear-gradient(135deg, #f5f7fa, #e4e8f0);
+      min-height: 100vh;
+    }
+    .container {
+      padding: 2rem 1rem;
+    }

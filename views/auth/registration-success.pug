@@ -1,0 +1,27 @@
+extends ../layout
+
+block content
+  div.container.mt-5
+    div.row.justify-content-center
+      div.col-md-8
+        div.card.text-center
+          div.card-header.bg-success.text-white
+            h3 Registration Successful!
+          
+          div.card-body.p-5
+            div.mb-4
+              i.fas.fa-check-circle.text-success.fa-4x
+            
+            h4.mb-4 Thank you for registering as a #{userType}
+            
+            p.mb-4 We've sent a verification email to: 
+              strong #{email}
+            
+            p.mb-3 Please check your inbox and click on the verification link to activate your account.
+            
+            p If you don't see the email, please check your spam folder.
+            
+            div.mt-5
+              a.btn.btn-primary(href="/auth/login") Go to Login Page
+              span.mx-2 or
+              a.btn.btn-outline-primary(href="/") Return to Home 

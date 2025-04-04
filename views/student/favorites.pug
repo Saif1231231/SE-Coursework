@@ -1,0 +1,138 @@
+extends ../layout
+
+block content
+  .container.py-5
+    h1.display-5.mb-4.text-center My Favorite Routes
+
+    .row.justify-content-center.mb-4
+      .col-md-8
+        if successMessage
+          .alert.alert-success.alert-dismissible.fade.show= successMessage
+        if errorMessage
+          .alert.alert-danger.alert-dismissible.fade.show= errorMessage
+    
+    if favorites && favorites.length > 0
+      .row
+        each favorite in favorites
+          .col-lg-6.mb-4
+            .card.favorite-route-card
+              .card-body
+                h5.card-title
+                  i.bi.bi-geo-alt-fill.text-primary.me-2
+                  | #{favorite.pickup_location} 
+                  i.bi.bi-arrow-right.mx-2 
+                  | #{favorite.dropoff_location}
+                
+                .route-details.mb-3
+                  .d-flex.justify-content-between.mb-2
+                    span
+                      i.bi.bi-calendar-check.me-2
+                      | Added on: 
+                    span.text-muted= new Date(favorite.created_at).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })
+                  
+                  if favorite.last_used
+                    .d-flex.justify-content-between.mb-2
+                      span
+                        i.bi.bi-clock-history.me-2
+                        | Last used: 
+                      span.text-muted= new Date(favorite.last_used).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' })
+                  
+                  if favorite.note
+                    .mt-3.p-2.bg-light.rounded.fst-italic
+                      i.bi.bi-chat-quote.me-2
+                      | #{favorite.note}
+
+                .d-flex.mt-3
+                  a.btn.btn-primary.me-2(href=`/student/transport?whereFrom=${favorite.pickup_location}&whereTo=${favorite.dropoff_location}`)
+                    i.bi.bi-search.me-2
+                    | Find rides
+                  
+                  button.btn.btn-outline-secondary.me-2(type="button" data-bs-toggle="modal" data-bs-target=`#editModal${favorite.id}`)
+                    i.bi.bi-pencil.me-2
+                    | Edit
+                  
+                  form(action=`/student/favorites/${favorite.id}/delete` method="POST" style="display: inline;").confirm-delete
+                    button.btn.btn-outline-danger(type="submit")
+                      i.bi.bi-trash.me-2
+                      | Remove
+
+              // Edit Modal for this favorite
+              .modal.fade(id=`editModal${favorite.id}` tabindex="-1" aria-labelledby=`editModalLabel${favorite.id}` aria-hidden="true")
+                .modal-dialog
+                  .modal-content
+                    .modal-header
+                      h5.modal-title(id=`editModalLabel${favorite.id}`) Edit Favorite Route
+                      button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+                    
+                    .modal-body
+                      form(action=`/student/favorites/${favorite.id}/update` method="POST").needs-validation
+                        .mb-3
+                          label.form-label(for=`pickup${favorite.id}`) Pickup Location
+                          input.form-control(type="text" id=`pickup${favorite.id}` name="pickup_location" value=favorite.pickup_location required)
+                          .invalid-feedback Please enter a pickup location.
+
+                        .mb-3
+                          label.form-label(for=`dropoff${favorite.id}`) Destination
+                          input.form-control(type="text" id=`dropoff${favorite.id}` name="dropoff_location" value=favorite.dropoff_location required)
+                          .invalid-feedback Please enter a destination.
+
+                        .mb-3
+                          label.form-label(for=`note${favorite.id}`) Note (optional)
+                          textarea.form-control(id=`note${favorite.id}` name="note" rows="2")= favorite.note
+
+                        .text-end
+                          button.btn.btn-secondary.me-2(type="button" data-bs-dismiss="modal") Cancel
+                          button.btn.btn-primary(type="submit") Save Changes
+    else
+      .row.justify-content-center
+        .col-md-8
+          .alert.alert-info.text-center
+            i.bi.bi-info-circle.me-2
+            | You don't have any favorite routes yet.
+    
+    .row.justify-content-center.mt-4
+      .col-md-8
+        .card
+          .card-header.bg-light
+            h4.mb-0
+              i.bi.bi-plus-circle.me-2
+              | Add New Favorite Route
+          .card-body
+            form(action="/student/favorites/add" method="POST").needs-validation
+              .mb-3
+                label.form-label(for="pickup_location") Pickup Location
+                input.form-control(type="text" id="pickup_location" name="pickup_location" placeholder="Enter pickup location" required)
+                .invalid-feedback Please enter a pickup location.
+              
+              .mb-3
+                label.form-label(for="dropoff_location") Destination
+                input.form-control(type="text" id="dropoff_location" name="dropoff_location" placeholder="Enter destination" required)
+                .invalid-feedback Please enter a destination.
+              
+              .mb-3
+                label.form-label(for="note") Note (optional)
+                textarea.form-control(id="note" name="note" rows="2" placeholder="E.g., Daily commute, Weekend trip")
+              
+              .d-grid
+                button.btn.btn-primary(type="submit")
+                  i.bi.bi-bookmark-plus.me-2
+                  | Save Route
+    
+    .text-center.mt-4
+      a.btn.btn-secondary(href="/")
+        i.bi.bi-house.me-2
+        | Back to Home
+
+  script.
+    // Confirm delete action
+    document.addEventListener('DOMContentLoaded', function() {
+      const deleteForms = document.querySelectorAll('form.confirm-delete');
+      
+      deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+          if (!confirm('Are you sure you want to remove this favorite route?')) {
+            e.preventDefault();
+          }
+        });
+      });
+    }); 

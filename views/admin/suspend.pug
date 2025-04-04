@@ -1,0 +1,61 @@
+extends ../layout
+
+block content
+    style.
+        .badge {
+            padding: 8px 12px;
+            font-size: 0.9em;
+        }
+        .table th {
+            background-color: #f8f9fa;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .table-warning {
+            background-color: #fff3cd !important;
+        }
+
+    .container.mt-4
+        h1.mb-4.text-center UniShared
+        h3.mb-4.text-center User Management
+        if message
+            .alert.alert-info= message
+        
+        if users && users.length > 0
+            .table-responsive
+                table.table.table-striped
+                    thead
+                        tr
+                            th Name
+                            th Email
+                            th Phone
+                            th Type
+                            th Status
+                            th Created At
+                            th(style="width: 150px") Actions
+                    tbody
+                        each user in users
+                            tr(class=user.suspended ? 'table-warning' : '')
+                                td= user.name
+                                td= user.email
+                                td= user.phone
+                                td
+                                    span.badge(class=user.type === 'driver' ? 'bg-primary' : 'bg-success')= user.type
+                                td
+                                    if user.suspended
+                                        span.badge.bg-danger Suspended
+                                    else
+                                        span.badge.bg-success Active
+                                td= new Date(user.created_at).toLocaleDateString()
+                                td
+                                    form(method='POST' action=`/admin/suspend/${user.type}/${user.user_id}` style='display: inline')
+                                        if user.suspended
+                                            input(type='hidden' name='action' value='unsuspend')
+                                            button.btn.btn-success.btn-sm(type='submit') Unsuspend
+                                        else
+                                            input(type='hidden' name='action' value='suspend')
+                                            button.btn.btn-warning.btn-sm(type='submit' onclick='return confirm("Are you sure you want to suspend this user?")') Suspend
+        else
+            .alert.alert-info No users found. 

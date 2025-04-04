@@ -1,0 +1,43 @@
+version: '3.3'
+
+services:
+  web:
+    build:
+      context: ./
+    volumes:
+      - .:/src
+    command: supervisor -e 'js,pug,html' index.js
+    environment:
+      - NODE_ENV=docker
+    ports:
+      - "3002:3002"
+    depends_on:
+      - db
+    restart: always  # Ensures the service restarts if it crashes
+
+  db:
+    image: mysql:8.0  # Ensure a specific MySQL version for stability
+    restart: always
+    env_file:
+      - ./.env
+    environment:
+      - MYSQL_ROOT_PASSWORD=newpassword
+      - MYSQL_DATABASE=ridesharing
+    ports:
+      - "3309:3306"  # Changed from 3308 to avoid conflicts
+    volumes:
+      - ./db:/var/lib/mysql
+      - ./setup.sql:/docker-entrypoint-initdb.d/01-setup.sql
+      - ./admin_tables.sql:/docker-entrypoint-initdb.d/02-admin_tables.sql
+      - ./ridesharing.sql:/docker-entrypoint-initdb.d/03-ridesharing.sql
+      - ./sample_data.sql:/docker-entrypoint-initdb.d/04-sample_data.sql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    restart: always
+    environment:
+      - PMA_HOST=db
+      - PMA_PORT=3306
+      - MYSQL_ROOT_PASSWORD=newpassword
+    ports:
+      - "8082:80"  # Changed from 8081 to 8082 to avoid port conflicts

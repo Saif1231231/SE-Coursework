@@ -1,0 +1,195 @@
+extends ../layout
+
+block content
+  .container
+    .row.mb-4
+      .col-md-12
+        h1.text-center My Profile
+        if successMessage
+          .alert.alert-success= successMessage
+
+    .row
+      .col-md-4.mb-4
+        .card
+          .card-body.text-center
+            if profilePicUrl
+              img.img-fluid.rounded-circle.mb-3(src=profilePicUrl, alt=user.name, style="width: 150px; height: 150px; object-fit: cover;")
+            else
+              .rounded-circle.bg-secondary.d-flex.align-items-center.justify-content-center.mx-auto.mb-3(style="width: 150px; height: 150px;")
+                span.display-4.text-white= user.name.charAt(0).toUpperCase()
+            
+            h3= user.name
+            p.text-muted
+              if userType === 'passenger'
+                span.badge.bg-info Passenger
+              else if userType === 'driver'
+                span.badge.bg-success Driver
+              else
+                span.badge.bg-dark Admin
+            
+            p
+              i.bi.bi-envelope.me-2
+              |  #{user.email}
+            
+            if user.phone
+              p
+                i.bi.bi-telephone.me-2
+                |  #{user.phone}
+            
+            a.btn.btn-primary.mt-3(href="/profile/edit")
+              i.bi.bi-pencil.me-2
+              | Edit Profile
+
+      .col-md-8
+        .card
+          .card-header.bg-light.d-flex.justify-content-between.align-items-center
+            h4.mb-0 Profile Details
+            if userType === 'passenger'
+              a.btn.btn-sm.btn-outline-primary(href="/student/transport")
+                i.bi.bi-car-front.me-1
+                | Find a Ride
+            else if userType === 'driver'
+              a.btn.btn-sm.btn-outline-primary(href="/driver/rides/create")
+                i.bi.bi-plus-circle.me-1
+                | Offer a Ride
+          .card-body
+            .row.mb-3
+              .col-md-4.col-5.fw-bold Name:
+              .col-md-8.col-7= user.name
+            .row.mb-3
+              .col-md-4.col-5.fw-bold Email:
+              .col-md-8.col-7= user.email
+            .row.mb-3
+              .col-md-4.col-5.fw-bold Phone:
+              .col-md-8.col-7= user.phone || 'Not provided'
+            .row.mb-3
+              .col-md-4.col-5.fw-bold User Type:
+              .col-md-8.col-7
+                if userType === 'passenger'
+                  span.badge.bg-info Passenger
+                else if userType === 'driver'
+                  span.badge.bg-success Driver
+                else
+                  span.badge.bg-dark Admin
+            
+            if userType === 'passenger' || userType === 'driver'
+              .row.mb-3
+                .col-md-4.col-5.fw-bold Account Created:
+                .col-md-8.col-7= new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+
+    if rides && rides.length > 0
+      .row.mt-4
+        .col-md-12
+          .card
+            .card-header.bg-light
+              h4.mb-0 
+                i.bi.bi-calendar3.me-2
+                | Ride History
+            
+            // Desktop view
+            .d-none.d-md-block
+              .table-responsive
+                table.table.table-striped
+                  thead
+                    tr
+                      th Departure
+                      th From
+                      th To
+                      if userType === 'passenger'
+                        th Driver
+                      if userType === 'driver'
+                        th Passengers
+                      th Price
+                      th Status
+                      th Actions
+                  tbody
+                    each ride in rides
+                      tr
+                        td= new Date(ride.departureTime).toLocaleString()
+                        td= ride.pickup_location
+                        td= ride.dropoff_location
+                        if userType === 'passenger'
+                          td= ride.driver_name || 'Not assigned'
+                        if userType === 'driver'
+                          td= ride.passenger_count || 0
+                        td £#{ride.fare}
+                        td
+                          case ride.status
+                            when 'requested'
+                              span.badge.bg-warning Requested
+                            when 'accepted'
+                              span.badge.bg-primary Accepted
+                            when 'completed'
+                              span.badge.bg-success Completed
+                            when 'cancelled'
+                              span.badge.bg-danger Cancelled
+                            default
+                              span.badge.bg-secondary= ride.status
+                        td
+                          a.btn.btn-sm.btn-primary(href=`/rides/${ride.ride_id}`)
+                            i.bi.bi-eye.me-1
+                            | View
+            
+            // Mobile view - Timeline style
+            .d-md-none.timeline-container
+              .timeline
+                each ride, index in rides
+                  .timeline-item
+                    .timeline-icon
+                      case ride.status
+                        when 'requested'
+                          i.bi.bi-clock
+                        when 'accepted'
+                          i.bi.bi-check2
+                        when 'completed'
+                          i.bi.bi-check2-all
+                        when 'cancelled'
+                          i.bi.bi-x-lg
+                        default
+                          i.bi.bi-question
+                    .timeline-date= new Date(ride.departureTime).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    .timeline-content
+                      h5.mb-2= ride.pickup_location + ' → ' + ride.dropoff_location
+                      .row.mb-2
+                        .col-6
+                          if userType === 'passenger'
+                            | Driver:
+                          else
+                            | Passengers:
+                        .col-6.text-end
+                          if userType === 'passenger'
+                            = ride.driver_name || 'Not assigned'
+                          else
+                            = ride.passenger_count || 0
+                      .row.mb-2
+                        .col-6 Price:
+                        .col-6.text-end £#{ride.fare}
+                      .row.mb-3
+                        .col-6 Status:
+                        .col-6.text-end
+                          case ride.status
+                            when 'requested'
+                              span.badge.bg-warning Requested
+                            when 'accepted'
+                              span.badge.bg-primary Accepted
+                            when 'completed'
+                              span.badge.bg-success Completed
+                            when 'cancelled'
+                              span.badge.bg-danger Cancelled
+                            default
+                              span.badge.bg-secondary= ride.status
+                      .d-grid
+                        a.btn.btn-sm.btn-outline-primary(href=`/rides/${ride.ride_id}`)
+                          i.bi.bi-eye.me-1
+                          | View Details
+    else
+      .row.mt-4
+        .col-md-12
+          .alert.alert-info
+            i.bi.bi-info-circle.me-2
+            if userType === 'passenger'
+              | You haven't booked any rides yet. 
+              a(href="/student/transport") Find a ride
+            else if userType === 'driver'
+              | You haven't offered any rides yet. 
+              a(href="/driver/rides/create") Offer a ride 

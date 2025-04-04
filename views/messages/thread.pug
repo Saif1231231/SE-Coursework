@@ -1,0 +1,91 @@
+extends ../layout
+
+block content
+  div.container.mt-4
+    div.row.mb-4
+      div.col
+        h1.mb-0= title
+      div.col-auto.d-flex.align-items-center
+        a.btn.btn-outline-secondary.me-2(href="/messages") Back to Messages
+    
+    div.card.mb-4
+      div.card-body.message-container
+        if messages && messages.length > 0
+          each message in messages
+            div.message(class=message.is_sender ? 'message-sent' : 'message-received')
+              div.message-header
+                strong= message.is_sender ? 'You' : thread.other_participant_name
+                span.text-muted.ms-2= new Date(message.sent_at).toLocaleString()
+              
+              div.message-body
+                p.mb-0= message.content
+        else
+          div.alert.alert-info.mb-0 No messages in this conversation yet.
+    
+    div.card
+      div.card-body
+        form#replyForm(onsubmit="sendReply(event)")
+          div.form-group.mb-3
+            label(for="content") Reply:
+            textarea#content.form-control(name="content" rows="3" required)
+          
+          div.form-group
+            button.btn.btn-primary(type="submit") Send Reply
+  
+  script.
+    async function sendReply(event) {
+      event.preventDefault();
+      
+      const content = document.getElementById('content').value;
+      const threadId = '#{thread.thread_id}';
+      
+      try {
+        const response = await fetch(`/messages/thread/${threadId}/reply`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ content })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Reload the page to show the new message
+          window.location.reload();
+        } else {
+          alert('Error: ' + (result.error || 'Failed to send reply'));
+        }
+      } catch (error) {
+        console.error('Error sending reply:', error);
+        alert('An error occurred while sending your reply');
+      }
+    }
+  
+  style.
+    .message-container {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+    
+    .message {
+      margin-bottom: 15px;
+      padding: 10px 15px;
+      border-radius: 10px;
+      max-width: 80%;
+    }
+    
+    .message-sent {
+      background-color: #d1e7ff;
+      margin-left: auto;
+    }
+    
+    .message-received {
+      background-color: #f0f0f0;
+      margin-right: auto;
+    }
+    
+    .message-header {
+      font-size: 0.85rem;
+      margin-bottom: 5px;
+    } 

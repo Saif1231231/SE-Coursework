@@ -1,0 +1,34 @@
+extends ../layout
+
+block content
+  div.container.mt-4
+    div.row.mb-4
+      div.col
+        h1.mb-0 Messages
+      div.col-auto
+        a.btn.btn-primary(href="/messages/new") New Message
+    
+    div.card
+      div.card-body
+        if threads && threads.length > 0
+          div.list-group.message-threads
+            each thread in threads
+              a.list-group-item.list-group-item-action.d-flex.flex-column(
+                href=`/messages/thread/${thread.thread_id}`
+                class=thread.unread_count > 0 ? 'unread' : ''
+              )
+                div.d-flex.w-100.justify-content-between.align-items-center
+                  h5.mb-1= thread.subject || `Conversation with ${thread.other_participant_name}`
+                  
+                  if thread.unread_count > 0
+                    span.badge.bg-primary.rounded-pill= thread.unread_count
+                
+                div.d-flex.w-100.justify-content-between
+                  div
+                    p.mb-1
+                      small.text-muted= `${thread.other_participant_name} (${thread.other_participant_type})`
+                    p.message-preview.mb-0= thread.last_message_preview
+                  
+                  small.text-muted= new Date(thread.sent_at).toLocaleDateString()
+        else
+          div.alert.alert-info.mb-0 You don't have any messages yet. 

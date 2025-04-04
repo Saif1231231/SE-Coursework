@@ -1,0 +1,97 @@
+extends ../layout
+
+block content
+  div.container.mt-4
+    div.row.mb-4
+      div.col
+        h1.mb-0 New Message
+      div.col-auto
+        a.btn.btn-outline-secondary(href="/messages") Back to Messages
+    
+    div.card
+      div.card-body
+        form#messageForm(onsubmit="sendMessage(event)")
+          if selectedRecipient
+            input(type="hidden" name="recipient" value=`${selectedRecipient.type}:${selectedRecipient.id}`)
+            div.form-group.mb-3
+              label(for="recipient-display") To:
+              input#recipient-display.form-control(type="text" value=`${selectedRecipient.name} (${selectedRecipient.type})` disabled)
+          else
+            div.form-group.mb-3
+              label(for="recipient") To:
+              select#recipient.form-control(name="recipient" required)
+                option(value="") -- Select Recipient --
+                each recipient in recipients
+                  option(value=`${recipient.type}:${recipient.id}`)= `${recipient.name} (${recipient.type})`
+          
+          div.form-group.mb-3
+            label(for="subject") Subject:
+            input#subject.form-control(
+              type="text" 
+              name="subject" 
+              required
+              value=ride ? `Regarding ride from ${ride.pickup_location} to ${ride.dropoff_location}` : ''
+            )
+          
+          if ride
+            input(type="hidden" name="rideId" value=ride.ride_id)
+            div.form-group.mb-3
+              label Ride Details:
+              div.card.card-body.bg-light
+                p.mb-1 
+                  strong From: 
+                  span= ride.pickup_location
+                p.mb-1 
+                  strong To: 
+                  span= ride.dropoff_location
+                p.mb-1
+                  strong Departure: 
+                  span= new Date(ride.departureTime).toLocaleString()
+                p.mb-0
+                  strong Fare: 
+                  span= `£${ride.fare}`
+          
+          div.form-group.mb-3
+            label(for="content") Message:
+            textarea#content.form-control(name="content" rows="5" required)
+          
+          div.form-group
+            button.btn.btn-primary(type="submit") Send Message
+  
+  script.
+    async function sendMessage(event) {
+      event.preventDefault();
+      
+      const form = document.getElementById('messageForm');
+      const recipient = form.querySelector('[name="recipient"]').value;
+      const subject = form.querySelector('[name="subject"]').value;
+      const content = form.querySelector('[name="content"]').value;
+      const rideIdInput = form.querySelector('[name="rideId"]');
+      const rideId = rideIdInput ? rideIdInput.value : null;
+      
+      try {
+        const response = await fetch('/messages/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ recipient, subject, content, rideId })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Redirect to message list or the thread
+          window.location.href = '/messages';
+        } else {
+          const errorMessage = result.errors ? 
+            result.errors.map(e => e.msg).join(', ') : 
+            (result.error || 'Failed to send message');
+          
+          alert('Error: ' + errorMessage);
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
+        alert('An error occurred while sending your message');
+      }
+    } 

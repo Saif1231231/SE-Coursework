@@ -1,0 +1,58 @@
+extends ../layout
+
+block content
+  .container.py-5
+    h1.display-5.mb-4.text-center My Bookings
+    
+    if bookings && bookings.length > 0
+      .row
+        each booking in bookings
+          .col-md-6.mb-4
+            .card
+              .card-body
+                h5.card-title #{booking.pickup_location} to #{booking.dropoff_location}
+                .booking-details
+                  p.mb-2
+                    strong Driver: 
+                    span= booking.driver_name
+                  p.mb-2
+                    strong Date: 
+                    span= new Date(booking.departureTime).toLocaleDateString()
+                  p.mb-2
+                    strong Time: 
+                    span= new Date(booking.departureTime).toLocaleTimeString()
+                  p.mb-2
+                    strong Status: 
+                    span.badge.bg-primary= booking.booking_status || booking.ride_status
+                  p.mb-2
+                    strong Price: 
+                    span £#{booking.fare}
+                
+                if booking.status === 'pending'
+                  form(method='POST' action=`/student/bookings/${booking.booking_id}/cancel`)
+                    button.btn.btn-primary.mt-3(type='submit') Cancel Booking
+    else
+      .text-center.mt-4
+        p.lead No bookings found
+        a.btn.btn-primary.mt-3(href='/student/transport') Find a Ride
+        a.btn.btn-secondary.mt-3.ms-2(href='/') Back to Home
+
+  style.
+    .card {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .card-title {
+      color: #2C3E50;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    .booking-details p {
+      margin-bottom: 0.5rem;
+      color: #2C3E50;
+    }
+    .badge {
+      padding: 0.5rem 1rem;
+      font-weight: 500;
+    } 

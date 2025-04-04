@@ -1,0 +1,35 @@
+extends ../layout
+
+block content
+  h1 Ride Details
+  
+  div.ride-details-card
+    h2 #{ride.pickup_location} to #{ride.dropoff_location}
+    
+    div.ride-info-grid
+      div.info-section
+        h3 Location Details
+        p
+          strong Pickup: 
+          span= ride.pickup_location
+        p
+          strong Destination: 
+          span= ride.dropoff_location
+      
+      div.info-section
+        h3 Ride Details
+        p
+          strong Departure Time: 
+          span= ride.departureTime ? (typeof ride.departureTime === 'string' ? ride.departureTime : new Date(ride.departureTime).toLocaleString()) : 'Not scheduled'
+        p
+          strong Available Seats: 
+          span= ride.seatsAvailable
+        p
+          strong Price: 
+          span £#{ride.fare}
+        p
+          strong Status: 
+          span.ride-status(class=ride.status ? ride.status.toLowerCase() : '')= ride.status || 'Unknown'
+    
+    div.button-container
+      a.btn.btn-secondary(href="/rides") Back to Rides 

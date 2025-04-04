@@ -1,0 +1,102 @@
+extends ../layout
+
+block content
+  .container
+    h1.text-center.mb-4 Available Rides
+    
+    .row.mb-4
+      .col-12.text-center
+        a.btn.btn-primary(href="/rides/create") 
+          i.bi.bi-plus-circle.me-2
+          | New Ride
+
+    if rides && rides.length
+      // Desktop view - table format
+      .d-none.d-md-block
+        .table-responsive
+          table.table
+            thead
+              tr
+                th From
+                th To
+                th Driver
+                th Departure
+                th Seats
+                th Price
+                th Status
+                th
+            tbody
+              each ride in rides
+                tr
+                  td= ride.pickup_location
+                  td= ride.dropoff_location
+                  td= ride.driver_name || 'Not assigned'
+                  td= ride.departureTime ? new Date(ride.departureTime).toLocaleString() : 'Not scheduled'
+                  td= ride.seatsAvailable
+                  td £#{ride.fare}
+                  td
+                    span(class=`ride-status ${ride.status}`)= ride.status
+                  td
+                    a.btn.btn-sm.btn-primary(href=`/rides/${ride.ride_id}`) 
+                      i.bi.bi-eye.me-1
+                      | View
+      
+      // Mobile view - card format
+      .d-md-none
+        .row
+          each ride in rides
+            .col-12.mb-3
+              .card.ride-card
+                .card-body
+                  .d-flex.justify-content-between.align-items-start.mb-3
+                    h5.card-title.mb-0= `${ride.pickup_location} → ${ride.dropoff_location}`
+                    span(class=`ride-status ${ride.status}`)= ride.status
+                  
+                  .card-text.mb-3
+                    .row.mb-2
+                      .col-5 Driver:
+                      .col-7.text-end= ride.driver_name || 'Not assigned'
+                    .row.mb-2
+                      .col-5 Departure:
+                      .col-7.text-end= ride.departureTime ? new Date(ride.departureTime).toLocaleString() : 'Not scheduled'
+                    .row.mb-2
+                      .col-5 Seats:
+                      .col-7.text-end= ride.seatsAvailable
+                    .row.mb-2
+                      .col-5 Price:
+                      .col-7.text-end £#{ride.fare}
+                  
+                  .text-center
+                    a.btn.btn-primary.btn-sm(href=`/rides/${ride.ride_id}`)
+                      i.bi.bi-eye.me-1
+                      | View Details
+    else
+      .alert.alert-info.text-center 
+        i.bi.bi-info-circle.me-2
+        | No rides available at the moment.
+
+    .text-center.mt-4
+      a.btn.btn-secondary(href="/") 
+        i.bi.bi-house.me-2
+        | Back to Home
+
+  style.
+    .table {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin: 20px auto;
+      max-width: 1000px;
+    }
+    .table th {
+      background: #f8f9fa;
+      border-top: none;
+    }
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 0.875rem;
+    }
+    .alert {
+      max-width: 600px;
+      margin: 20px auto;
+    } 

@@ -1,0 +1,78 @@
+extends ../layout
+
+block content
+  div.container.mt-4
+    div.row.justify-content-center
+      div.col-md-8
+        div.card
+          div.card-header
+            h4= userType === 'driver' ? 'Driver Registration' : 'Student Registration'
+          
+          div.card-body
+            if message
+              if status === 'success'
+                div.alert.alert-success= message
+              else 
+                div.alert.alert-danger= message
+            
+            form(action="/auth/register" method="POST")
+              input(type="hidden" name="userType" value=userType)
+              
+              div.row.mb-3
+                div.col-md-6
+                  div.form-group
+                    label(for="name") Full Name *
+                    input.form-control#name(type="text" name="name" required value=formData ? formData.name : '')
+                
+                div.col-md-6
+                  div.form-group
+                    label(for="email") Email Address *
+                    input.form-control#email(type="email" name="email" required value=formData ? formData.email : '')
+              
+              div.row.mb-3
+                div.col-md-6
+                  div.form-group
+                    label(for="phone") Phone Number *
+                    input.form-control#phone(type="tel" name="phone" required value=formData ? formData.phone : '')
+                
+                if userType === 'driver'
+                  div.col-md-6
+                    div.form-group
+                      label(for="licenseNumber") License Number *
+                      input.form-control#licenseNumber(type="text" name="licenseNumber" required value=formData ? formData.licenseNumber : '')
+              
+              if userType === 'driver'
+                div.form-group.mb-3
+                  label(for="vehicleDetails") Vehicle Details (Make, Model, Color)
+                  input.form-control#vehicleDetails(type="text" name="vehicleDetails" value=formData ? formData.vehicleDetails : '')
+              
+              div.row.mb-3
+                div.col-md-6
+                  div.form-group
+                    label(for="password") Password *
+                    input.form-control#password(type="password" name="password" required minlength="6")
+                    small.form-text.text-muted Password must be at least 6 characters
+                
+                div.col-md-6
+                  div.form-group
+                    label(for="confirmPassword") Confirm Password *
+                    input.form-control#confirmPassword(type="password" name="confirmPassword" required)
+              
+              div.form-group.mb-3
+                div.form-check
+                  input.form-check-input#terms(type="checkbox" required)
+                  label.form-check-label(for="terms") I agree to the Terms of Service and Privacy Policy
+              
+              div.form-group.text-center.mt-4
+                button.btn.btn-primary.px-4(type="submit") Register
+            
+            div.mt-3.text-center
+              p Already have an account? 
+                a(href="/auth/login") Login here
+              
+              if userType === 'student'
+                p Are you a driver? 
+                  a(href="/auth/register?userType=driver") Register as a Driver
+              else
+                p Are you a student? 
+                  a(href="/auth/register?userType=student") Register as a Student 

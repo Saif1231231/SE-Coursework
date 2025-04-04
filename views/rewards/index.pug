@@ -1,0 +1,148 @@
+extends ../layout
+
+block content
+  div.container.mt-4
+    div.row.mb-4
+      div.col
+        h1 Points & Rewards
+      div.col-auto
+        button.btn.btn-outline-info.refresh-points(onclick="window.location.reload()") Refresh
+    
+    div.row
+      div.col-lg-4.mb-4
+        div.card
+          div.card-header.bg-primary.text-white
+            h3.mb-0 Your Points
+          
+          div.card-body.text-center
+            h2.mb-3.points-display #{points}
+            
+            if userType === 'driver' && rating !== null
+              div.mb-3
+                p.mb-1 Your Driver Rating
+                div.rating-display.mb-0
+                  - const fullStars = Math.floor(rating);
+                  - const hasHalfStar = rating % 1 >= 0.5;
+                  - for (let i = 1; i <= 5; i++)
+                    if i <= fullStars
+                      i.fas.fa-star.text-warning
+                    else if i === fullStars + 1 && hasHalfStar
+                      i.fas.fa-star-half-alt.text-warning
+                    else
+                      i.far.fa-star.text-warning
+                  span.ms-2 (#{rating}/5)
+            
+            p.text-muted Points can be used to claim rewards below
+      
+      div.col-lg-8.mb-4
+        div.card
+          div.card-header.bg-success.text-white
+            h3.mb-0 Available Rewards
+          
+          if rewards && rewards.length > 0
+            div.list-group.list-group-flush
+              each reward in rewards
+                div.list-group-item
+                  div.d-flex.justify-content-between.align-items-center
+                    div
+                      h4.mb-1= reward.name
+                      p.mb-1= reward.description
+                      p.mb-0.text-muted #{reward.points_required} points required
+                    
+                    button.btn.btn-primary.claim-reward(
+                      data-reward-id=reward.reward_id
+                      data-reward-name=reward.name
+                      data-reward-points=reward.points_required
+                      onclick=`claimReward(${reward.reward_id}, '${reward.name}', ${reward.points_required})`
+                    ) Claim
+          else
+            div.card-body
+              p.mb-0 Earn more points to unlock rewards!
+    
+    div.row
+      div.col-12
+        div.card
+          div.card-header.bg-info.text-white
+            h3.mb-0 Point History
+          
+          if history && history.length > 0
+            div.table-responsive
+              table.table.table-striped.mb-0
+                thead
+                  tr
+                    th Activity
+                    th Points
+                    th Date
+                tbody
+                  each activity in history
+                    tr
+                      td
+                        div= activity.description || formatActivityType(activity.activity_type)
+                        small.text-muted= activity.activity_type
+                      td(class=activity.points_earned >= 0 ? 'text-success' : 'text-danger')
+                        strong= activity.points_earned >= 0 ? '+' + activity.points_earned : activity.points_earned
+                      td= new Date(activity.created_at).toLocaleString()
+          else
+            div.card-body
+              p.mb-0 No point activity yet. Complete rides and leave reviews to earn points!
+    
+    div.row.mt-4
+      div.col-12
+        div.card
+          div.card-header.bg-secondary.text-white
+            h3.mb-0 Your Claimed Rewards
+          
+          if claimedRewards && claimedRewards.length > 0
+            div.table-responsive
+              table.table.table-striped.mb-0
+                thead
+                  tr
+                    th Reward
+                    th Code
+                    th Claimed On
+                tbody
+                  each reward in claimedRewards
+                    tr
+                      td= reward.name
+                      td
+                        code= reward.reward_code
+                      td= new Date(reward.claimed_at).toLocaleString()
+          else
+            div.card-body
+              p.mb-0 You haven't claimed any rewards yet.
+  
+  script.
+    function formatActivityType(type) {
+      return type.split('_').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ');
+    }
+    
+    function claimReward(rewardId, rewardName, pointsRequired) {
+      if (#{points} < pointsRequired) {
+        alert(`You don't have enough points to claim ${rewardName}. You need ${pointsRequired} points but you have ${#{points}} points.`);
+        return;
+      }
+      
+      if (confirm(`Are you sure you want to claim "${rewardName}" for ${pointsRequired} points?`)) {
+        fetch(`/rewards/claim/${rewardId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert(`${data.message}\nYour reward code: ${data.code}`);
+            window.location.reload();
+          } else {
+            alert(`Error: ${data.error}`);
+          }
+        })
+        .catch(error => {
+          console.error('Error claiming reward:', error);
+          alert('An error occurred while claiming the reward. Please try again.');
+        });
+      }
+    } 

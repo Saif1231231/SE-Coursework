@@ -1,0 +1,89 @@
+extends ../layout
+
+block content
+  .container.py-5
+    h1.display-5.mb-4.text-center Find a Ride
+    
+    .row.justify-content-center
+      .col-md-8
+        .card.mb-4
+          .card-body
+            form(action="/student/transport/search" method="POST")
+              .mb-3
+                label.form-label(for="whereFrom") Where From?
+                input.form-control(
+                  type="text" 
+                  id="whereFrom" 
+                  name="whereFrom" 
+                  value=searchQuery ? searchQuery.whereFrom : ''
+                  placeholder="Enter pickup location"
+                )
+              
+              .mb-3
+                label.form-label(for="whereTo") Where To?
+                input.form-control(
+                  type="text" 
+                  id="whereTo" 
+                  name="whereTo" 
+                  value=searchQuery ? searchQuery.whereTo : ''
+                  placeholder="Enter destination"
+                )
+              
+              .d-grid
+                button.btn.btn-primary(type="submit") Search Rides
+
+              if searchQuery && searchQuery.whereFrom && searchQuery.whereTo
+                form.mt-3(action="/student/favorites/add" method="POST")
+                  input(type="hidden" name="pickup_location" value=searchQuery.whereFrom)
+                  input(type="hidden" name="dropoff_location" value=searchQuery.whereTo)
+                  button.btn.btn-outline-primary.d-flex.align-items-center.justify-content-center.w-100(type="submit")
+                    i.bi.bi-bookmark-plus.me-2
+                    | Save This Route
+
+    if rides && rides.length
+      .row.justify-content-center
+        .col-md-8
+          each ride in rides
+            .card.mb-3
+              .card-body
+                h5.card-title #{ride.pickup_location} to #{ride.dropoff_location}
+                .ride-info
+                  if ride.driver_name
+                    p.mb-2
+                      strong Driver: 
+                      span #{ride.driver_name}
+                  p.mb-2
+                    strong Departure: 
+                    span= new Date(ride.departureTime).toLocaleString('en-GB')
+                  p.mb-2
+                    strong Available Seats: 
+                    span #{ride.seatsAvailable}
+                  p.mb-2
+                    strong Price: 
+                    span £#{parseFloat(ride.fare).toFixed(2)}
+                .text-end.mt-3
+                  a.btn.btn-primary(href=`/student/book-ride/${ride.ride_id}`) Book This Ride
+    else
+      .row.justify-content-center
+        .col-md-8
+          .alert.alert-secondary.text-center No available rides found matching your criteria.
+
+    .row.justify-content-center.mt-4
+      .col-md-8.text-center
+        a.btn.btn-secondary(href="/") Back to Home
+
+  style.
+    .card {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .form-label {
+      font-weight: 500;
+      color: #2C3E50;
+    }
+    .ride-info strong {
+      color: #2C3E50;
+      display: inline-block;
+      width: 120px;
+    } 

@@ -1,0 +1,13 @@
+extends layout
+
+block content
+  h1 Ride Details
+  div.ride-info
+    p  Pickup: #{ride.pickupLocation}
+    p  Destination: #{ride.destination}
+    p  Departure: #{new Date(ride.departureTime).toLocaleString()}
+    p  Seats Available: #{ride.seatsAvailable}
+    p  Price: #{ride.price} USD
+  div.button-container
+    a.btn.btn-primary(href="/bookings/book/" + ride.rideID) Book This Ride
+    a.btn.btn-secondary(href="/rides") Back to Rides

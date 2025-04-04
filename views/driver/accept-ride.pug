@@ -1,0 +1,81 @@
+extends ../layout
+
+block content
+    style.
+        body {
+            background-color: #f5f5f5;
+        }
+        .container.mt-4 {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+        }
+        .card-header {
+            background-color: #f8f9fa;
+        }
+        .badge {
+            padding: 8px 12px;
+            font-size: 0.9em;
+        }
+        .btn-success {
+            background-color: #4A90E2;
+            border-color: #4A90E2;
+        }
+        .btn-success:hover {
+            background-color: #357ABD;
+            border-color: #357ABD;
+        }
+        .btn-secondary {
+            background-color: #6B8CFF;
+            border-color: #6B8CFF;
+        }
+        .btn-secondary:hover {
+            background-color: #5A7BEF;
+            border-color: #5A7BEF;
+        }
+        .badge.bg-primary {
+            background-color: #4A90E2 !important;
+        }
+
+    .container.mt-4
+        h1.mb-4.text-center UniShared
+        h3.mb-4.text-center Available Rides
+        if message
+            .alert.alert-info= message
+
+        if rides && rides.length > 0
+            .row
+                each ride in rides
+                    .col-md-6.mb-4
+                        .card
+                            .card-header.d-flex.justify-content-between.align-items-center
+                                h5.mb-0 Ride Request
+                                span.badge.bg-primary= ride.status
+                            .card-body
+                                .mb-3
+                                    strong From: 
+                                    span= ride.pickup_location
+                                .mb-3
+                                    strong To: 
+                                    span= ride.dropoff_location
+                                .mb-3
+                                    strong Date: 
+                                    span= new Date(ride.departureTime).toLocaleDateString()
+                                .mb-3
+                                    strong Time: 
+                                    span= new Date(ride.departureTime).toLocaleTimeString()
+                                .mb-3
+                                    strong Passenger: 
+                                    span= ride.passenger_name || 'Not assigned'
+                                form(method='POST' action=`/driver/accept-ride/${ride.ride_id}`)
+                                    button.btn.btn-success(type='submit') Accept Ride
+        else
+            .alert.alert-info No available rides found.
+
+    div.button-container
+        a.btn.btn-secondary(href="/driver") Back to Dashboard 

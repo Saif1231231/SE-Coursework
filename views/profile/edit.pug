@@ -1,0 +1,74 @@
+extends ../layout
+
+block content
+  .container
+    .row.mb-4
+      .col-md-12
+        h1.text-center Edit Profile
+        if successMessage
+          .alert.alert-success= successMessage
+        if errorMessage
+          .alert.alert-danger= errorMessage
+
+    .row.justify-content-center
+      .col-md-8
+        .card
+          .card-header.bg-light
+            h4 Update Your Profile
+          .card-body
+            form(action="/profile/update", method="POST", enctype="multipart/form-data")
+              .row.mb-4
+                .col-md-12.text-center
+                  if profilePicUrl
+                    img.img-fluid.rounded-circle.mb-3#profile-preview(src=profilePicUrl, alt=user.name, style="width: 150px; height: 150px; object-fit: cover;")
+                  else
+                    .rounded-circle.bg-secondary.d-flex.align-items-center.justify-content-center.mx-auto.mb-3#profile-preview(style="width: 150px; height: 150px;")
+                      span.display-4.text-white= user.name.charAt(0).toUpperCase()
+                  
+                  .mb-3
+                    label.form-label(for="profilePicture") Profile Picture
+                    input.form-control#profilePicture(type="file", name="profilePicture", accept="image/*")
+                    .form-text Upload a square image for best results. Maximum file size: 5MB.
+                  
+              .mb-3
+                label.form-label(for="name") Name
+                input.form-control#name(type="text", name="name", value=user.name, required)
+              
+              .mb-3
+                label.form-label(for="email") Email
+                input.form-control#email(type="email", name="email", value=user.email, required)
+              
+              .mb-3
+                label.form-label(for="phone") Phone Number
+                input.form-control#phone(type="tel", name="phone", value=user.phone)
+              
+              .d-grid.gap-2.d-md-flex.justify-content-md-end.mt-4
+                a.btn.btn-secondary(href="/profile") Cancel
+                button.btn.btn-primary(type="submit") Save Changes
+
+  script.
+    // Image preview script
+    document.getElementById('profilePicture').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const previewEl = document.getElementById('profile-preview');
+          
+          // If it's a div (default avatar), replace with an image
+          if (previewEl.tagName.toLowerCase() === 'div') {
+            const img = document.createElement('img');
+            img.className = 'img-fluid rounded-circle mb-3';
+            img.id = 'profile-preview';
+            img.alt = 'Profile Preview';
+            img.style = 'width: 150px; height: 150px; object-fit: cover;';
+            img.src = event.target.result;
+            previewEl.parentNode.replaceChild(img, previewEl);
+          } else {
+            // Just update the image source
+            previewEl.src = event.target.result;
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }); 

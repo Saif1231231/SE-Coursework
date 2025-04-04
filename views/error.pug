@@ -1,0 +1,17 @@
+extends layout
+
+block content
+  .container.mt-5
+    .row.justify-content-center
+      .col-md-8.text-center
+        .card.border-danger
+          .card-header.bg-danger.text-white
+            h2 Error
+          .card-body
+            if message
+              p.lead= message
+            else
+              p.lead An unexpected error occurred.
+            
+            .mt-4
+              a.btn.btn-primary(href="/") Return to Home 

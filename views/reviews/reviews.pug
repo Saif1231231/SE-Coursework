@@ -1,0 +1,180 @@
+extends ../layout
+
+block content
+  .container.py-5
+    h1.display-5.mb-4.text-center Reviews
+    
+    .row
+      if reviews && reviews.length
+        .col-lg-8.mb-4
+          .card
+            .card-header.bg-light
+              h4.mb-0 
+                i.bi.bi-star.me-2
+                | Recent Reviews
+            .card-body
+              each review in reviews
+                .review-card.mb-4.pb-4.border-bottom
+                  .row
+                    .col-md-8
+                      h5.mb-2.review-route
+                        i.bi.bi-geo-alt.me-1
+                        | #{review.pickup_location || 'Unknown'} 
+                        i.bi.bi-arrow-right.mx-2
+                        | #{review.dropoff_location || 'Unknown'}
+                      .d-flex.align-items-center.mb-3
+                        .star-display.me-2
+                          - var rating = parseInt(review.rating) || 0
+                          - for (var i = 1; i <= 5; i++)
+                            if i <= rating
+                              i.bi.bi-star-fill.text-warning
+                            else
+                              i.bi.bi-star.text-muted
+                        span.text-muted (#{rating}/5)
+                      if review.comment
+                        p.review-comment.fst-italic.p-3.bg-light.rounded "#{review.comment}"
+                    .col-md-4.text-md-end
+                      .review-metadata.text-muted.small
+                        p
+                          i.bi.bi-person.me-1
+                          | #{review.passenger_name || 'Anonymous'} 
+                          i.bi.bi-arrow-right.mx-1
+                          | #{review.driver_name || 'Anonymous'}
+                        p
+                          i.bi.bi-calendar.me-1
+                          | #{review.created_at ? new Date(review.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown date'}
+      else
+        .col-lg-8.mb-4
+          .alert.alert-info
+            i.bi.bi-info-circle.me-2
+            | No reviews found yet. Be the first to leave a review!
+
+      .col-lg-4
+        .card
+          .card-header.bg-light
+            h4.mb-0 
+              i.bi.bi-pencil.me-2
+              | Write a Review
+          .card-body
+            form.review-form.needs-validation(action="/reviews/create" method="POST" novalidate)
+              .form-group.mb-3
+                label.form-label(for="rating") Rating
+                .star-rating-container.mb-2
+                  #star-rating.d-flex.justify-content-start
+                    .star-item(data-value="1" title="Poor") ★
+                    .star-item(data-value="2" title="Fair") ★
+                    .star-item(data-value="3" title="Average") ★
+                    .star-item(data-value="4" title="Good") ★
+                    .star-item(data-value="5" title="Excellent") ★
+                  input(type="hidden" name="rating" id="rating" value="" required)
+                .rating-text.text-muted.mb-2 
+                  | Your rating: 
+                  span#rating-value 0
+                  |  / 5
+                .invalid-feedback Please provide a rating.
+
+              .form-group.mb-3
+                label.form-label(for="review") Your Review
+                textarea.form-control(name="review" id="review" rows="3" placeholder="Share your experience..." required)
+                .invalid-feedback Please share your thoughts about the ride.
+
+              .form-group.mb-3
+                label.form-label(for="rideId") Select Ride
+                select.form-select(name="rideId" id="rideId" required)
+                  option(value="") Choose a ride...
+                  each ride in rides
+                    option(value=ride.ride_id) #{ride.pickup_location} to #{ride.dropoff_location}
+                .invalid-feedback Please select a ride to review.
+
+              .form-group.mb-3
+                label.form-label(for="passengerId") Passenger
+                select.form-select(name="passengerId" id="passengerId" required)
+                  option(value="") Select passenger...
+                  each passenger in passengers
+                    option(value=passenger.passenger_id) #{passenger.name}
+                .invalid-feedback Please select a passenger.
+
+              .form-group.mb-4
+                label.form-label(for="driverId") Driver
+                select.form-select(name="driverId" id="driverId" required)
+                  option(value="") Select driver...
+                  each driver in drivers
+                    option(value=driver.driver_id) #{driver.name}
+                .invalid-feedback Please select a driver.
+
+              .d-grid
+                button.btn.btn-primary(type="submit")
+                  i.bi.bi-send.me-2
+                  | Submit Review
+
+    .text-center.mt-4
+      a.btn.btn-secondary(href="/")
+        i.bi.bi-house.me-2
+        | Back to Home
+
+  style.
+    .star-item {
+      font-size: 2rem;
+      cursor: pointer;
+      color: #ddd;
+      transition: color 0.2s ease;
+      padding: 0 5px;
+    }
+    
+    .star-item:hover,
+    .star-item.active {
+      color: #ffb700;
+    }
+    
+    .star-display i {
+      margin-right: 2px;
+    }
+    
+    .review-card {
+      border-bottom: 1px solid #eee;
+    }
+    
+    .review-comment {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      font-style: italic;
+    }
+  
+  script.
+    document.addEventListener('DOMContentLoaded', function() {
+      const starItems = document.querySelectorAll('.star-item');
+      const ratingInput = document.getElementById('rating');
+      const ratingValue = document.getElementById('rating-value');
+      
+      // Star rating functionality
+      starItems.forEach(star => {
+        star.addEventListener('click', function() {
+          const value = this.getAttribute('data-value');
+          ratingInput.value = value;
+          ratingValue.textContent = value;
+          
+          // Clear all stars first
+          starItems.forEach(s => s.classList.remove('active'));
+          
+          // Add active class up to selected star
+          starItems.forEach(s => {
+            if (s.getAttribute('data-value') <= value) {
+              s.classList.add('active');
+            }
+          });
+        });
+      });
+      
+      // Form validation
+      const form = document.querySelector('.review-form');
+      
+      form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        
+        form.classList.add('was-validated');
+      });
+    }); 

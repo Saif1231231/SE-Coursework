@@ -1,0 +1,469 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Uni Ride Sharing API",
+    "description": "API documentation for the university ride sharing application",
+    "version": "1.0.0"
+  },
+  "host": "localhost:3002",
+  "basePath": "/api",
+  "schemes": ["http", "https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  
+  "securityDefinitions": {
+    "sessionAuth": {
+      "type": "apiKey",
+      "name": "Cookie",
+      "in": "header",
+      "description": "Session cookie for authentication"
+    }
+  },
+  
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "User login",
+        "description": "Authenticates a user and creates a session",
+        "tags": ["Authentication"],
+        "parameters": [
+          {
+            "name": "credentials",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["email", "password", "userType"],
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "john@example.com"
+                },
+                "password": {
+                  "type": "string",
+                  "format": "password",
+                  "example": "password123"
+                },
+                "userType": {
+                  "type": "string",
+                  "enum": ["student", "driver", "admin"],
+                  "example": "student"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login successful"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    
+    "/auth/register": {
+      "post": {
+        "summary": "User registration",
+        "description": "Registers a new passenger or driver",
+        "tags": ["Authentication"],
+        "parameters": [
+          {
+            "name": "userData",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["name", "email", "phone", "password", "userType"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "example": "John Doe"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "john@example.com"
+                },
+                "phone": {
+                  "type": "string",
+                  "example": "07123456789"
+                },
+                "password": {
+                  "type": "string",
+                  "format": "password",
+                  "example": "password123"
+                },
+                "userType": {
+                  "type": "string",
+                  "enum": ["student", "driver"],
+                  "example": "student"
+                },
+                "licenseNumber": {
+                  "type": "string",
+                  "example": "ABCD123456"
+                },
+                "vehicleDetails": {
+                  "type": "string",
+                  "example": "Toyota Corolla - Blue"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registration successful"
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "409": {
+            "description": "Email already registered"
+          }
+        }
+      }
+    },
+    
+    "/rides": {
+      "get": {
+        "summary": "Get available rides",
+        "description": "Gets a list of available rides based on search criteria",
+        "tags": ["Rides"],
+        "security": [{"sessionAuth": []}],
+        "parameters": [
+          {
+            "name": "pickupLocation",
+            "in": "query",
+            "type": "string",
+            "description": "Starting location"
+          },
+          {
+            "name": "dropoffLocation",
+            "in": "query",
+            "type": "string",
+            "description": "Destination location"
+          },
+          {
+            "name": "departureTime",
+            "in": "query",
+            "type": "string",
+            "format": "date-time",
+            "description": "Departure time"
+          },
+          {
+            "name": "maxPrice",
+            "in": "query",
+            "type": "number",
+            "description": "Maximum price"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of matching rides"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      
+      "post": {
+        "summary": "Create a new ride",
+        "description": "Creates a new ride offer (drivers only)",
+        "tags": ["Rides"],
+        "security": [{"sessionAuth": []}],
+        "parameters": [
+          {
+            "name": "rideData",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["pickupLocation", "dropoffLocation", "departureTime", "fare", "seatsAvailable"],
+              "properties": {
+                "pickupLocation": {
+                  "type": "string",
+                  "example": "Roehampton University"
+                },
+                "dropoffLocation": {
+                  "type": "string",
+                  "example": "Putney"
+                },
+                "departureTime": {
+                  "type": "string",
+                  "format": "date-time",
+                  "example": "2023-04-15T14:30:00Z"
+                },
+                "fare": {
+                  "type": "number",
+                  "example": 15.50
+                },
+                "seatsAvailable": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 8,
+                  "example": 4
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Ride created successfully"
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Not a driver"
+          }
+        }
+      }
+    },
+    
+    "/rides/{rideId}": {
+      "get": {
+        "summary": "Get ride details",
+        "description": "Gets details for a specific ride",
+        "tags": ["Rides"],
+        "security": [{"sessionAuth": []}],
+        "parameters": [
+          {
+            "name": "rideId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID of the ride"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ride details"
+          },
+          "404": {
+            "description": "Ride not found"
+          }
+        }
+      }
+    },
+    
+    "/bookings": {
+      "post": {
+        "summary": "Create a booking",
+        "description": "Books a seat on a ride",
+        "tags": ["Bookings"],
+        "security": [{"sessionAuth": []}],
+        "parameters": [
+          {
+            "name": "bookingData",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["rideId"],
+              "properties": {
+                "rideId": {
+                  "type": "integer",
+                  "example": 123
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Booking created successfully"
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "404": {
+            "description": "Ride not found"
+          },
+          "409": {
+            "description": "No seats available"
+          }
+        }
+      }
+    },
+    
+    "/bookings/{bookingId}/confirm": {
+      "post": {
+        "summary": "Confirm a booking",
+        "description": "Confirms a pending booking (drivers only)",
+        "tags": ["Bookings"],
+        "security": [{"sessionAuth": []}],
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID of the booking"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking confirmed"
+          },
+          "403": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Booking not found"
+          }
+        }
+      }
+    },
+    
+    "/bookings/{bookingId}/cancel": {
+      "post": {
+        "summary": "Cancel a booking",
+        "description": "Cancels a booking",
+        "tags": ["Bookings"],
+        "security": [{"sessionAuth": []}],
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID of the booking"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Booking cancelled"
+          },
+          "403": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Booking not found"
+          }
+        }
+      }
+    },
+    
+    "/messages": {
+      "get": {
+        "summary": "Get message threads",
+        "description": "Gets all message threads for the current user",
+        "tags": ["Messages"],
+        "security": [{"sessionAuth": []}],
+        "responses": {
+          "200": {
+            "description": "List of message threads"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      
+      "post": {
+        "summary": "Send a message",
+        "description": "Sends a new message to another user",
+        "tags": ["Messages"],
+        "security": [{"sessionAuth": []}],
+        "parameters": [
+          {
+            "name": "messageData",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["recipient", "subject", "content"],
+              "properties": {
+                "recipient": {
+                  "type": "string",
+                  "example": "passenger:123"
+                },
+                "subject": {
+                  "type": "string",
+                  "example": "Regarding ride on Friday"
+                },
+                "content": {
+                  "type": "string",
+                  "example": "Hi, I'd like to confirm our ride for Friday."
+                },
+                "rideId": {
+                  "type": "integer",
+                  "example": 456
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Message sent successfully"
+          },
+          "400": {
+            "description": "Invalid input data"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    
+    "/rewards": {
+      "get": {
+        "summary": "Get rewards",
+        "description": "Gets available rewards for the current user",
+        "tags": ["Rewards"],
+        "security": [{"sessionAuth": []}],
+        "responses": {
+          "200": {
+            "description": "List of available rewards and points"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
+    
+    "/rewards/claim/{rewardId}": {
+      "post": {
+        "summary": "Claim a reward",
+        "description": "Claims a reward with user points",
+        "tags": ["Rewards"],
+        "security": [{"sessionAuth": []}],
+        "parameters": [
+          {
+            "name": "rewardId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "ID of the reward"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reward claimed successfully"
+          },
+          "400": {
+            "description": "Not enough points"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Reward not found"
+          }
+        }
+      }
+    }
+  }
+} 

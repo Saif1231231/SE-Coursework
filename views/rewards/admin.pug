@@ -1,0 +1,201 @@
+extends ../layout
+
+block content
+  div.container.mt-4
+    div.row.mb-4
+      div.col
+        h1 Points & Rewards Management
+      div.col-auto
+        button.btn.btn-outline-info.refresh-points(onclick="window.location.reload()") Refresh
+    
+    div.row.mb-4
+      div.col-lg-6.mb-4
+        div.card
+          div.card-header.bg-info.text-white
+            h3.mb-0 Add Points to User
+          
+          div.card-body
+            form#addPointsForm(onsubmit="addPointsToUser(event)")
+              div.form-group.mb-3
+                label(for="userSelect") Select User:
+                select#userSelect.form-control(name="userSelect" required)
+                  option(value="") -- Select User --
+                  optgroup(label="Passengers")
+                    each passenger in passengers
+                      option(value=`passenger:${passenger.id}`)= `${passenger.name} (${passenger.points} pts)`
+                  optgroup(label="Drivers")
+                    each driver in drivers
+                      option(value=`driver:${driver.id}`)= `${driver.name} (${driver.points} pts)`
+              
+              div.form-group.mb-3
+                label(for="points") Points to Add:
+                input#points.form-control(type="number" name="points" min="1" max="1000" required)
+              
+              div.form-group.mb-3
+                label(for="description") Description (Optional):
+                input#description.form-control(type="text" name="description" placeholder="Reason for adding points")
+              
+              div.form-group
+                button.btn.btn-primary(type="submit") Add Points
+      
+      div.col-lg-6.mb-4
+        div.card
+          div.card-header.bg-success.text-white
+            h3.mb-0 Top 5 Users by Points
+          
+          div.list-group.list-group-flush
+            - const topUsers = [...passengers, ...drivers].sort((a, b) => b.points - a.points).slice(0, 5);
+            each user in topUsers
+              div.list-group-item
+                div.d-flex.justify-content-between.align-items-center
+                  div
+                    h5.mb-1= user.name
+                    p.mb-0
+                      span.badge.bg-info.me-2= user.type
+                      span.text-muted= user.email
+                  
+                  div.text-end
+                    div.h4.mb-0
+                      strong #{user.points}
+                      small.text-muted  pts
+    
+    div.row
+      div.col-lg-6.mb-4
+        div.card
+          div.card-header.bg-primary.text-white
+            h3.mb-0 Passenger Points
+          
+          div.table-responsive
+            table.table.table-striped.mb-0
+              thead
+                tr
+                  th Name
+                  th Points
+                  th.text-end Actions
+              tbody
+                each passenger in passengers
+                  tr
+                    td
+                      div= passenger.name
+                      small.text-muted= passenger.email
+                    td= passenger.points
+                    td.text-end
+                      button.btn.btn-sm.btn-primary.add-points-btn(
+                        data-user-id=passenger.id
+                        data-user-type="passenger"
+                        data-user-name=passenger.name
+                        data-bs-toggle="modal"
+                        data-bs-target="#quickAddModal"
+                        onclick=`setQuickAddUser("${passenger.name}", "passenger", "${passenger.id}")`
+                      ) + Points
+      
+      div.col-lg-6.mb-4
+        div.card
+          div.card-header.bg-warning.text-dark
+            h3.mb-0 Driver Points
+          
+          div.table-responsive
+            table.table.table-striped.mb-0
+              thead
+                tr
+                  th Name
+                  th Points
+                  th Rating
+                  th.text-end Actions
+              tbody
+                each driver in drivers
+                  tr
+                    td
+                      div= driver.name
+                      small.text-muted= driver.email
+                    td= driver.points
+                    td= driver.rating ? driver.rating.toFixed(1) : 'N/A'
+                    td.text-end
+                      button.btn.btn-sm.btn-primary.add-points-btn(
+                        data-user-id=driver.id
+                        data-user-type="driver"
+                        data-user-name=driver.name
+                        data-bs-toggle="modal"
+                        data-bs-target="#quickAddModal"
+                        onclick=`setQuickAddUser("${driver.name}", "driver", "${driver.id}")`
+                      ) + Points
+  
+  // Quick Add Points Modal
+  div#quickAddModal.modal.fade(tabindex="-1" aria-hidden="true")
+    div.modal-dialog
+      div.modal-content
+        div.modal-header
+          h5.modal-title Add Points
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        div.modal-body
+          p Adding points to: <strong id="modalUserName"></strong>
+          
+          div.form-group.mb-3
+            label(for="modalPoints") Points to Add:
+            input#modalPoints.form-control(type="number" min="1" max="1000" value="50")
+          
+          div.form-group.mb-3
+            label(for="modalDescription") Description:
+            input#modalDescription.form-control(type="text" placeholder="Reason for adding points")
+          
+          input#modalUserId(type="hidden")
+          input#modalUserType(type="hidden")
+        
+        div.modal-footer
+          button.btn.btn-secondary(type="button" data-bs-dismiss="modal") Cancel
+          button#addPointsBtn.btn.btn-primary(type="button") Add Points
+  
+  script.
+    function setQuickAddUser(name, type, id) {
+      document.getElementById('modalUserName').textContent = name;
+      document.getElementById('modalUserId').value = id;
+      document.getElementById('modalUserType').value = type;
+    }
+    
+    function addPointsToUser(event) {
+      event.preventDefault();
+      
+      const userSelectValue = document.getElementById('userSelect').value;
+      if (!userSelectValue) {
+        alert('Please select a user');
+        return;
+      }
+      
+      const [userType, userId] = userSelectValue.split(':');
+      const points = document.getElementById('points').value;
+      const description = document.getElementById('description').value;
+      
+      submitPointsAddition(userId, userType, points, description);
+    }
+    
+    document.getElementById('addPointsBtn').addEventListener('click', function() {
+      const userId = document.getElementById('modalUserId').value;
+      const userType = document.getElementById('modalUserType').value;
+      const points = document.getElementById('modalPoints').value;
+      const description = document.getElementById('modalDescription').value;
+      
+      submitPointsAddition(userId, userType, points, description);
+    });
+    
+    function submitPointsAddition(userId, userType, points, description) {
+      fetch('/rewards/admin/add-points', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId, userType, points, description })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert(data.message);
+          window.location.reload();
+        } else {
+          alert(`Error: ${data.error}`);
+        }
+      })
+      .catch(error => {
+        console.error('Error adding points:', error);
+        alert('An error occurred while adding points. Please try again.');
+      });
+    }
