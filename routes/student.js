@@ -178,14 +178,46 @@ router.post('/bookings/:bookingId/cancel', async (req, res) => {
 // List Favorite Routes
 router.get('/favorites', async (req, res) => {
     try {
+        // Get all favorites for the user
         const [favorites] = await db.query(`
             SELECT * FROM favorite_routes
             WHERE passenger_id = ?
             ORDER BY created_at DESC
         `, [req.session.userId]);
         
+        // For each favorite, get upcoming rides matching the route
+        const favoritesWithRides = [];
+        
+        for (const favorite of favorites) {
+            const [matchingRides] = await db.query(`
+                SELECT 
+                    r.ride_id,
+                    r.pickup_location,
+                    r.dropoff_location,
+                    r.departureTime,
+                    r.seatsAvailable,
+                    r.fare,
+                    r.status,
+                    d.name as driver_name
+                FROM ride r
+                LEFT JOIN driver d ON r.driver_id = d.driver_id
+                WHERE r.status = 'accepted'
+                AND r.seatsAvailable > 0
+                AND r.pickup_location LIKE ?
+                AND r.dropoff_location LIKE ?
+                AND r.departureTime > NOW()
+                ORDER BY r.departureTime
+                LIMIT 3
+            `, [`%${favorite.pickup_location}%`, `%${favorite.dropoff_location}%`]);
+            
+            favoritesWithRides.push({
+                ...favorite,
+                matchingRides: matchingRides || []
+            });
+        }
+        
         res.render('student/favorites', { 
-            favorites,
+            favorites: favoritesWithRides,
             successMessage: req.query.success,
             errorMessage: req.query.error
         });
@@ -201,10 +233,11 @@ router.get('/favorites', async (req, res) => {
 // Add Favorite Route
 router.post('/favorites/add', async (req, res) => {
     try {
-        const { pickup_location, dropoff_location, note } = req.body;
+        const { pickup_location, dropoff_location, note, redirect } = req.body;
         
         if (!pickup_location || !dropoff_location) {
-            return res.redirect('/student/favorites?error=Both pickup and dropoff locations are required');
+            const errorMsg = encodeURIComponent('Both pickup and dropoff locations are required');
+            return res.redirect(`/student/favorites?error=${errorMsg}`);
         }
         
         // Check if this route is already a favorite
@@ -216,20 +249,40 @@ router.post('/favorites/add', async (req, res) => {
         `, [req.session.userId, pickup_location, dropoff_location]);
         
         if (existingFavorites.length > 0) {
-            return res.redirect('/student/favorites?error=This route is already in your favorites');
+            // Update the existing favorite's last_used timestamp instead of adding a duplicate
+            await db.query(`
+                UPDATE favorite_routes 
+                SET last_used = NOW(), note = COALESCE(?, note)
+                WHERE id = ?
+            `, [note || null, existingFavorites[0].id]);
+            
+            const successMsg = encodeURIComponent('Route already in favorites. Updated timestamp.');
+            
+            // Redirect based on where the request came from
+            if (redirect) {
+                return res.redirect(`${redirect}?success=${successMsg}`);
+            }
+            return res.redirect(`/student/favorites?success=${successMsg}`);
         }
         
         // Add new favorite
         await db.query(`
             INSERT INTO favorite_routes 
-            (passenger_id, pickup_location, dropoff_location, note, created_at) 
-            VALUES (?, ?, ?, ?, NOW())
+            (passenger_id, pickup_location, dropoff_location, note, created_at, last_used) 
+            VALUES (?, ?, ?, ?, NOW(), NOW())
         `, [req.session.userId, pickup_location, dropoff_location, note || null]);
         
-        res.redirect('/student/favorites?success=Route added to favorites');
+        const successMsg = encodeURIComponent('Route added to favorites successfully');
+        
+        // Redirect based on where the request came from
+        if (redirect) {
+            return res.redirect(`${redirect}?success=${successMsg}`);
+        }
+        return res.redirect(`/student/favorites?success=${successMsg}`);
     } catch (err) {
         console.error('Error adding favorite route:', err);
-        res.redirect('/student/favorites?error=Error adding favorite: ' + err.message);
+        const errorMsg = encodeURIComponent('Error adding favorite: ' + err.message);
+        return res.redirect(`/student/favorites?error=${errorMsg}`);
     }
 });
 

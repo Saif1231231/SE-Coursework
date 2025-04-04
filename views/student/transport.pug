@@ -6,6 +6,13 @@ block content
     
     .row.justify-content-center
       .col-md-8
+        if successMessage
+          .alert.alert-success.alert-dismissible.fade.show= successMessage
+            button.btn-close(type="button" data-bs-dismiss="alert" aria-label="Close")
+        if errorMessage
+          .alert.alert-danger.alert-dismissible.fade.show= errorMessage
+            button.btn-close(type="button" data-bs-dismiss="alert" aria-label="Close")
+        
         .card.mb-4
           .card-body
             form(action="/student/transport/search" method="POST")
@@ -36,6 +43,7 @@ block content
                 form.mt-3(action="/student/favorites/add" method="POST")
                   input(type="hidden" name="pickup_location" value=searchQuery.whereFrom)
                   input(type="hidden" name="dropoff_location" value=searchQuery.whereTo)
+                  input(type="hidden" name="redirect" value="/student/transport")
                   button.btn.btn-outline-primary.d-flex.align-items-center.justify-content-center.w-100(type="submit")
                     i.bi.bi-bookmark-plus.me-2
                     | Save This Route
@@ -61,7 +69,15 @@ block content
                   p.mb-2
                     strong Price: 
                     span £#{parseFloat(ride.fare).toFixed(2)}
-                .text-end.mt-3
+                .d-flex.justify-content-between.align-items-center.mt-3
+                  form(action="/student/favorites/add" method="POST")
+                    input(type="hidden" name="pickup_location" value=ride.pickup_location)
+                    input(type="hidden" name="dropoff_location" value=ride.dropoff_location)
+                    input(type="hidden" name="note" value=`Regular ride - £${ride.fare}`)
+                    input(type="hidden" name="redirect" value="/student/transport")
+                    button.btn.btn-outline-secondary.btn-sm(type="submit")
+                      i.bi.bi-bookmark-plus.me-1
+                      | Save as Favorite
                   a.btn.btn-primary(href=`/student/book-ride/${ride.ride_id}`) Book This Ride
     else
       .row.justify-content-center
@@ -71,6 +87,9 @@ block content
     .row.justify-content-center.mt-4
       .col-md-8.text-center
         a.btn.btn-secondary(href="/") Back to Home
+        a.btn.btn-outline-primary.ms-2(href="/student/favorites") 
+          i.bi.bi-bookmark-star.me-1
+          | My Favorites
 
   style.
     .card {

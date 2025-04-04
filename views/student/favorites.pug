@@ -8,21 +8,24 @@ block content
       .col-md-8
         if successMessage
           .alert.alert-success.alert-dismissible.fade.show= successMessage
+            button.btn-close(type="button" data-bs-dismiss="alert" aria-label="Close")
         if errorMessage
           .alert.alert-danger.alert-dismissible.fade.show= errorMessage
+            button.btn-close(type="button" data-bs-dismiss="alert" aria-label="Close")
     
     if favorites && favorites.length > 0
       .row
         each favorite in favorites
           .col-lg-6.mb-4
             .card.favorite-route-card
-              .card-body
-                h5.card-title
+              .card-header.bg-light
+                h5.mb-0
                   i.bi.bi-geo-alt-fill.text-primary.me-2
                   | #{favorite.pickup_location} 
                   i.bi.bi-arrow-right.mx-2 
                   | #{favorite.dropoff_location}
-                
+              
+              .card-body
                 .route-details.mb-3
                   .d-flex.justify-content-between.mb-2
                     span
@@ -42,6 +45,24 @@ block content
                       i.bi.bi-chat-quote.me-2
                       | #{favorite.note}
 
+                // Show matching upcoming rides if available
+                if favorite.matchingRides && favorite.matchingRides.length > 0
+                  hr
+                  h6.mt-3.mb-3
+                    i.bi.bi-calendar-event.me-2
+                    | Upcoming Rides:
+                  .list-group.mb-3
+                    each ride in favorite.matchingRides
+                      a.list-group-item.list-group-item-action.d-flex.justify-content-between.align-items-center(href=`/rides/${ride.ride_id}`)
+                        div
+                          strong= new Date(ride.departureTime).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) 
+                          span.ms-2.text-muted= new Date(ride.departureTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+                        div
+                          span.badge.bg-primary.me-1 £#{ride.fare}
+                          if ride.seatsAvailable > 0
+                            span.badge.bg-success #{ride.seatsAvailable} seats
+                
+                // Action buttons
                 .d-flex.mt-3
                   a.btn.btn-primary.me-2(href=`/student/transport?whereFrom=${favorite.pickup_location}&whereTo=${favorite.dropoff_location}`)
                     i.bi.bi-search.me-2
@@ -118,10 +139,34 @@ block content
                   i.bi.bi-bookmark-plus.me-2
                   | Save Route
     
-    .text-center.mt-4
-      a.btn.btn-secondary(href="/")
-        i.bi.bi-house.me-2
-        | Back to Home
+    .row.justify-content-center.mt-4
+      .col-md-8.text-center
+        .btn-group
+          a.btn.btn-secondary(href="/")
+            i.bi.bi-house.me-2
+            | Home
+          a.btn.btn-primary(href="/student/transport")
+            i.bi.bi-search.me-2
+            | Search Rides
+
+  style.
+    .favorite-route-card {
+      transition: all 0.3s ease;
+      border: 1px solid #e0e0e0;
+    }
+    .favorite-route-card:hover {
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    .card-header {
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .route-details {
+      font-size: 0.9rem;
+    }
+    .list-group-item-action:hover {
+      background-color: #f8f9fa;
+    }
 
   script.
     // Confirm delete action

@@ -130,11 +130,30 @@ CREATE TABLE IF NOT EXISTS dispute (
     FOREIGN KEY (driver_id) REFERENCES driver(driver_id) ON DELETE CASCADE
 );
 
+-- Favorite Routes Table
+CREATE TABLE IF NOT EXISTS favorite_routes (
+    id INT NOT NULL AUTO_INCREMENT,
+    passenger_id INT NOT NULL,
+    pickup_location VARCHAR(255) NOT NULL,
+    dropoff_location VARCHAR(255) NOT NULL, 
+    note TEXT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_used TIMESTAMP NULL,
+    PRIMARY KEY (id),
+    INDEX fk_favorite_passenger_idx (passenger_id ASC),
+    CONSTRAINT fk_favorite_passenger
+        FOREIGN KEY (passenger_id)
+        REFERENCES passenger (passenger_id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- First, clear existing data
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE review;
 TRUNCATE TABLE booking;
 TRUNCATE TABLE ride;
+TRUNCATE TABLE favorite_routes;
 TRUNCATE TABLE passenger;
 TRUNCATE TABLE driver;
 TRUNCATE TABLE admin;
@@ -189,6 +208,14 @@ INSERT INTO booking (passenger_id, driver_id, ride_id, booking_status) VALUES
 -- Insert sample dispute
 INSERT INTO dispute (ride_id, passenger_id, driver_id, description, status) VALUES
 (11, 1, 1, 'Driver was late by 30 minutes', 'pending');
+
+-- Insert sample favorite routes
+INSERT INTO favorite_routes (passenger_id, pickup_location, dropoff_location, note, created_at, last_used) VALUES
+(1, 'University Campus', 'City Center', 'Daily commute', NOW(), NOW()),
+(1, 'Home', 'University Library', 'Study sessions', NOW(), NOW()),
+(1, 'Gym', 'Shopping Mall', 'Weekend routine', NOW(), NOW()),
+(2, 'Roehampton University', 'Putney', 'Regular route', NOW(), NOW()),
+(2, 'Wimbledon', 'Roehampton University', 'Classes on Tuesday', NOW(), NOW());
 
 -- Example queries
 SELECT * FROM ride WHERE status = 'accepted' ORDER BY departureTime;

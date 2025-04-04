@@ -33,13 +33,33 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Session configuration
+// Session configuration with enhanced security
+const sessionSecret = process.env.SESSION_SECRET || 'ride_sharing_secret_replace_in_production';
+console.log(`Using session secret: ${sessionSecret.substr(0, 3)}...`);
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'ride_sharing_secret',
+  secret: sessionSecret,
   resave: false,
-  saveUninitialized: true,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
+  saveUninitialized: false, // Only save session when data exists
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
 }));
+
+// Session debugging middleware
+app.use((req, res, next) => {
+  if (req.session) {
+    console.log('Session exists:', req.sessionID);
+    if (req.session.userId) {
+      console.log('User is logged in:', req.session.userId, req.session.userType);
+    }
+  } else {
+    console.log('No session exists');
+  }
+  next();
+});
 
 // Make user session data available to templates
 app.use((req, res, next) => {

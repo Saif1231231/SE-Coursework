@@ -9,6 +9,10 @@ block content
         a.btn.btn-primary(href="/rides/create") 
           i.bi.bi-plus-circle.me-2
           | New Ride
+        if session && session.userType === 'passenger'
+          a.btn.btn-outline-primary.ms-2(href="/student/favorites")
+            i.bi.bi-bookmark-star.me-2
+            | My Favorite Routes
 
     if rides && rides.length
       // Desktop view - table format
@@ -24,7 +28,7 @@ block content
                 th Seats
                 th Price
                 th Status
-                th
+                th Actions
             tbody
               each ride in rides
                 tr
@@ -37,9 +41,18 @@ block content
                   td
                     span(class=`ride-status ${ride.status}`)= ride.status
                   td
-                    a.btn.btn-sm.btn-primary(href=`/rides/${ride.ride_id}`) 
-                      i.bi.bi-eye.me-1
-                      | View
+                    .btn-group
+                      a.btn.btn-sm.btn-primary(href=`/rides/${ride.ride_id}`) 
+                        i.bi.bi-eye.me-1
+                        | View
+                      if session && session.userType === 'passenger'
+                        form.d-inline(action="/student/favorites/add" method="POST")
+                          input(type="hidden" name="pickup_location" value=ride.pickup_location)
+                          input(type="hidden" name="dropoff_location" value=ride.dropoff_location)
+                          input(type="hidden" name="note" value=`Regular ride - £${ride.fare}`)
+                          input(type="hidden" name="redirect" value="/rides")
+                          button.btn.btn-sm.btn-outline-secondary(type="submit")
+                            i.bi.bi-bookmark-plus
       
       // Mobile view - card format
       .d-md-none
@@ -66,7 +79,16 @@ block content
                       .col-5 Price:
                       .col-7.text-end £#{ride.fare}
                   
-                  .text-center
+                  .d-flex.justify-content-between
+                    if session && session.userType === 'passenger'
+                      form(action="/student/favorites/add" method="POST")
+                        input(type="hidden" name="pickup_location" value=ride.pickup_location)
+                        input(type="hidden" name="dropoff_location" value=ride.dropoff_location)
+                        input(type="hidden" name="note" value=`Regular ride - £${ride.fare}`)
+                        input(type="hidden" name="redirect" value="/rides")
+                        button.btn.btn-outline-secondary.btn-sm(type="submit")
+                          i.bi.bi-bookmark-plus.me-1
+                          | Save
                     a.btn.btn-primary.btn-sm(href=`/rides/${ride.ride_id}`)
                       i.bi.bi-eye.me-1
                       | View Details
@@ -99,4 +121,27 @@ block content
     .alert {
       max-width: 600px;
       margin: 20px auto;
+    }
+    .ride-status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      text-transform: capitalize;
+    }
+    .ride-status.requested {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+    .ride-status.accepted {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .ride-status.completed {
+      background-color: #cce5ff;
+      color: #004085;
+    }
+    .ride-status.cancelled {
+      background-color: #f8d7da;
+      color: #721c24;
     } 
