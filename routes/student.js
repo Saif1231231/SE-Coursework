@@ -152,7 +152,11 @@ router.get('/bookings', async (req, res) => {
             ORDER BY r.departureTime DESC
         `, [req.session.userId]);
         
-        res.render('student/bookings', { bookings });
+        res.render('student/bookings', { 
+            bookings,
+            successMessage: req.query.success,
+            errorMessage: req.query.error
+        });
     } catch (err) {
         console.error('Error fetching bookings:', err);
         res.status(500).send('Database error: ' + err.message);
@@ -170,6 +174,57 @@ router.post('/bookings/:bookingId/cancel', async (req, res) => {
     } catch (err) {
         console.error('Error cancelling booking:', err);
         res.status(500).send('Database error: ' + err.message);
+    }
+});
+
+// Book a ride
+router.get('/book-ride/:rideId', async (req, res) => {
+    try {
+        const rideId = req.params.rideId;
+        const passengerId = req.session.userId;
+        
+        if (!passengerId) {
+            return res.status(401).render('auth/login', { 
+                message: 'You must be logged in to book a ride',
+                userType: 'student'
+            });
+        }
+        
+        // Get ride details first to show confirmation
+        const [rides] = await db.query(`
+            SELECT 
+                r.*,
+                d.name as driver_name
+            FROM ride r
+            LEFT JOIN driver d ON r.driver_id = d.driver_id
+            WHERE r.ride_id = ? AND r.seatsAvailable > 0 AND r.status = 'accepted'
+        `, [rideId]);
+        
+        if (!rides || rides.length === 0) {
+            return res.status(404).render('student/transport', { 
+                errorMessage: 'Ride not found or no longer available' 
+            });
+        }
+        
+        const ride = rides[0];
+        
+        // Create the booking
+        const [result] = await db.query(`
+            INSERT INTO booking (passenger_id, driver_id, ride_id, booking_status)
+            VALUES (?, ?, ?, 'confirmed')
+        `, [passengerId, ride.driver_id, rideId]);
+        
+        // Update seats available
+        await db.query(`
+            UPDATE ride SET seatsAvailable = seatsAvailable - 1 
+            WHERE ride_id = ?
+        `, [rideId]);
+        
+        // Redirect to bookings page with success message
+        res.redirect('/student/bookings?success=Ride booked successfully');
+    } catch (err) {
+        console.error('Error booking ride:', err);
+        res.redirect('/student/transport?error=' + encodeURIComponent('Error booking ride: ' + err.message));
     }
 });
 

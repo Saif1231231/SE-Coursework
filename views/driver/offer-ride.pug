@@ -1,0 +1,93 @@
+extends ../layout
+
+block content
+  .container.py-5
+    h1.display-5.mb-4.text-center Offer a Ride
+    
+    .row.justify-content-center
+      .col-md-8
+        if error
+          .alert.alert-danger.alert-dismissible.fade.show= error
+            button.btn-close(type="button" data-bs-dismiss="alert" aria-label="Close")
+        if successMessage
+          .alert.alert-success.alert-dismissible.fade.show= successMessage
+            button.btn-close(type="button" data-bs-dismiss="alert" aria-label="Close")
+        
+        .card.mb-4
+          .card-body
+            form(action="/driver/rides/create" method="POST")
+              input(type="hidden" name="driverID" value=driverId)
+              
+              .mb-3
+                label.form-label(for="pickupLocation") Pickup Location
+                input.form-control(
+                  type="text" 
+                  id="pickupLocation" 
+                  name="pickupLocation" 
+                  placeholder="Enter pickup location"
+                  required
+                )
+              
+              .mb-3
+                label.form-label(for="destination") Destination
+                input.form-control(
+                  type="text" 
+                  id="destination" 
+                  name="destination" 
+                  placeholder="Enter destination"
+                  required
+                )
+              
+              .mb-3
+                label.form-label(for="departureTime") Departure Time
+                input.form-control(
+                  type="datetime-local" 
+                  id="departureTime" 
+                  name="departureTime"
+                  required
+                )
+              
+              .mb-3
+                label.form-label(for="seatsAvailable") Available Seats
+                input.form-control(
+                  type="number" 
+                  id="seatsAvailable" 
+                  name="seatsAvailable"
+                  min="1"
+                  max="8"
+                  value="4"
+                  required
+                )
+              
+              .mb-3
+                label.form-label(for="price") Price (£)
+                .input-group
+                  span.input-group-text £
+                  input.form-control(
+                    type="number" 
+                    id="price" 
+                    name="price"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    required
+                  )
+              
+              .d-grid.gap-2.mt-4
+                button.btn.btn-primary(type="submit") Create Ride
+                a.btn.btn-outline-secondary(href="/driver") Cancel
+
+    .row.justify-content-center.mt-4
+      .col-md-8.text-center
+        p.text-muted Remember: Being reliable and on time helps maintain your driver rating!
+
+  style.
+    .card {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .form-label {
+      font-weight: 500;
+      color: #2C3E50;
+    } 

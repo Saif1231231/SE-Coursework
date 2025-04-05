@@ -15,13 +15,16 @@ block content
               .d-grid.gap-3.mt-4
                 if user.type === 'passenger'
                   a.btn.btn-primary.btn-lg(href="/student/transport") Transport
+                  a.btn.btn-primary.btn-lg(href="/messages") Messages
                   a.btn.btn-primary.btn-lg(href="/student/bookings") My Bookings
                   a.btn.btn-primary.btn-lg(href="/student/favorites") Saved Routes
                 else if user.type === 'driver'
                   a.btn.btn-primary.btn-lg(href="/driver") Driver Dashboard
+                  a.btn.btn-primary.btn-lg(href="/messages") Messages
                   a.btn.btn-primary.btn-lg(href="/driver/rides/create") Offer a Ride
                 else if user.type === 'admin'
                   a.btn.btn-primary.btn-lg(href="/admin") Admin Dashboard
+                  a.btn.btn-primary.btn-lg(href="/messages") Messages
                 
                 a.btn.btn-outline-primary.btn-lg(href="/profile") My Profile
                 a.btn.btn-outline-secondary.btn-lg(href="/auth/logout") Log Out

@@ -1,3 +1,9 @@
+// ⚠️ IMPORTANT NOTICE ⚠️
+// This file is not being used by the application.
+// The actual app.js file is located in the app directory.
+// Please make changes to app/app.js instead of this file.
+// This file is kept for reference purposes only.
+
 const express = require("express");
 const session = require('express-session');
 const path = require('path');
@@ -17,6 +23,10 @@ const ridesRouter = require('./routes/rides');
 const bookingsRouter = require('./routes/bookings');
 const profileRouter = require('./routes/profile');
 const reviewsRouter = require('./routes/reviews');
+const messagesRouter = require('./routes/messages');
+
+// Import services
+const messageService = require('./services/messaging');
 
 // Import error handler
 const errorHandler = require('./routes/error-handler');
@@ -61,9 +71,38 @@ app.use((req, res, next) => {
   next();
 });
 
+// Load unread message count for all routes when user is logged in
+app.use(async (req, res, next) => {
+  if (req.session && req.session.userId) {
+    try {
+      console.log('Getting global unread count for user:', req.session.userId, req.session.userType);
+      const unreadCount = await messageService.getUnreadMessageCount(
+        req.session.userId,
+        req.session.userType
+      );
+      
+      console.log('Global unread message count:', unreadCount);
+      // Store the count in the session for the navigation bar badge
+      req.session.unreadMessageCount = unreadCount;
+    } catch (err) {
+      console.error('Error getting global unread message count:', err);
+      // Continue even if there's an error
+    }
+  }
+  next();
+});
+
 // Make user session data available to templates
 app.use((req, res, next) => {
   res.locals.session = req.session;
+  if (req.session && req.session.userId) {
+    console.log('Setting session data for templates:', {
+      userId: req.session.userId,
+      userType: req.session.userType,
+      name: req.session.name,
+      unreadMessageCount: req.session.unreadMessageCount
+    });
+  }
   next();
 });
 
@@ -77,6 +116,17 @@ app.use('/rides', ridesRouter);
 app.use('/bookings', bookingsRouter);
 app.use('/profile', profileRouter);
 app.use('/reviews', reviewsRouter);
+app.use('/messages', messagesRouter);
+
+// Ensure messaging tables exist
+(async () => {
+  try {
+    await messageService.ensureMessagingTablesExist();
+    console.log('Messaging tables setup completed!');
+  } catch (err) {
+    console.error('Error setting up messaging tables:', err);
+  }
+})();
 
 // 404 handler
 app.use((req, res, next) => {

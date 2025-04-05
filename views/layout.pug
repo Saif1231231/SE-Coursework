@@ -93,8 +93,24 @@ html
         color: #2C3E50;
         border: 1px solid #E74C3C;
       }
+      /* Message notification badge */
+      .badge-message {
+        position: relative;
+        top: -8px;
+        left: -3px;
+        font-size: 0.6rem;
+      }
 
   body
+    // Debug session info - only show if there's an issue
+    if process.env.NODE_ENV === 'development' && session
+      .debug-info.bg-light.p-3.mb-3.border.border-danger
+        h5.text-danger Debug Information
+        p Session ID: #{session.userId || 'Not set'}
+        p User Type: #{session.userType || 'Not set'}
+        p Name: #{session.name || 'Not set'}
+        p Unread Messages: #{session.unreadMessageCount || 0}
+    
     // Loading spinner
     #loading-spinner.spinner-overlay
       .spinner
@@ -108,6 +124,15 @@ html
           ul.navbar-nav.ms-auto
             li.nav-item
               a.nav-link(href="/") Home
+            
+            if session && session.userId
+              li.nav-item
+                a.nav-link(href="/messages")
+                  i.bi.bi-envelope.me-1
+                  | Messages
+                  if session.unreadMessageCount && session.unreadMessageCount > 0
+                    span.badge.bg-danger.rounded-pill.badge-message #{session.unreadMessageCount}
+            
             if session && session.userType === 'passenger'
               li.nav-item
                 a.nav-link(href="/student/transport") Transport
@@ -122,6 +147,9 @@ html
                 a.nav-link(href="/driver") Driver Dashboard
               li.nav-item
                 a.nav-link(href="/driver/rides/create") Offer a Ride
+            else if session && session.userType === 'admin'
+              li.nav-item
+                a.nav-link(href="/admin") Admin Dashboard
             else if !session || !session.userId
               li.nav-item
                 a.nav-link(href="/rides") Rides
@@ -148,6 +176,12 @@ html
                   else if session.userType === 'admin'
                     li
                       a.dropdown-item(href="/admin") Dashboard
+                  li
+                    a.dropdown-item(href="/messages")
+                      i.bi.bi-envelope.me-1
+                      | Messages
+                      if session.unreadMessageCount && session.unreadMessageCount > 0
+                        span.badge.bg-danger.ms-1 #{session.unreadMessageCount}
                   li
                     a.dropdown-item(href="/profile") My Profile
                   li

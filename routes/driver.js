@@ -14,7 +14,10 @@ router.use((req, res, next) => {
 
 // Driver Dashboard
 router.get('/', (req, res) => {
-    res.render('driver/dashboard');
+    res.render('driver/dashboard', {
+        successMessage: req.query.success,
+        errorMessage: req.query.error
+    });
 });
 
 // Driver Profile
@@ -264,6 +267,46 @@ router.get('/active-rides', async (req, res) => {
     } catch (err) {
         console.error('Error fetching active rides:', err);
         res.status(500).send('Database error: ' + err.message);
+    }
+});
+
+// Offer a Ride Form Page
+router.get('/rides/create', (req, res) => {
+    try {
+        res.render('driver/offer-ride', {
+            driverId: req.session.userId,
+            error: req.query.error,
+            successMessage: req.query.success
+        });
+    } catch (err) {
+        console.error('Error showing offer ride form:', err);
+        res.status(500).send('Server error: ' + err.message);
+    }
+});
+
+// Handle Ride Creation
+router.post('/rides/create', async (req, res) => {
+    try {
+        const { pickupLocation, destination, departureTime, seatsAvailable, price } = req.body;
+        const driverId = req.session.userId;
+        
+        // Validate input
+        if (!pickupLocation || !destination || !departureTime || !seatsAvailable || !price) {
+            return res.redirect('/driver/rides/create?error=All fields are required');
+        }
+        
+        // Create the ride
+        await db.query(
+            `INSERT INTO ride (driver_id, pickup_location, dropoff_location, departureTime, seatsAvailable, fare, status) 
+             VALUES (?, ?, ?, ?, ?, ?, 'accepted')`,
+            [driverId, pickupLocation, destination, departureTime, seatsAvailable, price]
+        );
+        
+        // Redirect with success message
+        res.redirect('/driver?success=Ride created successfully!');
+    } catch (err) {
+        console.error('Error creating ride:', err);
+        res.redirect(`/driver/rides/create?error=${encodeURIComponent('Error creating ride: ' + err.message)}`);
     }
 });
 

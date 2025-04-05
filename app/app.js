@@ -22,6 +22,12 @@ app.use(session({
     cookie: { secure: false } // set to true if using https
 }));
 
+// Make session data available to all views
+app.use((req, res, next) => {
+    res.locals.session = req.session;
+    next();
+});
+
 // ✅ Import Database Connection
 const db = require("../services/db");
 
@@ -33,6 +39,7 @@ const adminRoutes = require("../routes/admin");
 const driverRoutes = require("../routes/driver");
 const authRoutes = require("../routes/auth");
 const profileRoutes = require("../routes/profile");
+const messagesRoutes = require("../routes/messages");
 
 // ✅ Register Routes
 app.use("/auth", authRoutes);
@@ -42,6 +49,20 @@ app.use("/student", studentRoutes);
 app.use("/admin", adminRoutes);
 app.use("/driver", driverRoutes);
 app.use("/profile", profileRoutes);
+app.use("/messages", messagesRoutes);
+
+// Import messaging service to ensure tables exist
+const messageService = require('../services/messaging');
+
+// Ensure messaging tables exist
+(async () => {
+  try {
+    await messageService.ensureMessagingTablesExist();
+    console.log('Messaging tables setup completed!');
+  } catch (err) {
+    console.error('Error setting up messaging tables:', err);
+  }
+})();
 
 // ✅ Home Page Route
 app.get("/", (req, res) => {

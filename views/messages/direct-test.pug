@@ -1,0 +1,113 @@
+extends ../layout
+
+block content
+  div.container.mt-4
+    div.row
+      div.col-12
+        h1 Messaging System Test Page
+        if session && session.userId
+          div.alert.alert-success
+            p You are logged in as: #{session.name} (#{session.userType} ##{session.userId})
+            p Unread message count: #{session.unreadMessageCount || 0}
+            
+          div.row.mt-4
+            div.col-md-6
+              div.card
+                div.card-header
+                  h5 Test Direct Message
+                div.card-body
+                  form#testMessageForm(onsubmit="return sendTestMessage()")
+                    div.mb-3
+                      label.form-label(for="recipientType") Recipient Type
+                      select#recipientType.form-control(name="recipientType" required)
+                        option(value="") -- Select Type --
+                        option(value="passenger") Student/Passenger
+                        option(value="driver") Driver
+                        option(value="admin") Admin
+                        
+                    div.mb-3
+                      label.form-label(for="recipientId") Recipient ID
+                      input#recipientId.form-control(type="number" name="recipientId" required)
+                      small.form-text.text-muted
+                        | Student IDs: 1-4 (Marcus Rashford=1, Harry Kane=2, etc.)
+                        br
+                        | Driver IDs: 1-4 (Lewis Hamilton=1, Max Verstappen=2, etc.)
+                    
+                    div.mb-3
+                      label.form-label(for="subject") Subject
+                      input#subject.form-control(type="text" name="subject" required)
+                      
+                    div.mb-3
+                      label.form-label(for="message") Message
+                      textarea#message.form-control(name="message" rows="4" required)
+                      
+                    button.btn.btn-primary(type="submit") Send Test Message
+                    
+                  div#messageResult.mt-3
+                  
+            div.col-md-6
+              div.card
+                div.card-header
+                  h5 Navigation Links
+                div.card-body
+                  ul
+                    li
+                      a(href="/messages") View All Messages
+                    li
+                      a(href="/messages/new") Create New Message
+                    li 
+                      a(href="/debug-session" target="_blank") View Session Debug Data
+        else
+          div.alert.alert-warning
+            p You are not logged in. Please 
+              a(href="/auth/login") login 
+              | to test the messaging system.
+              
+  script.
+    async function sendTestMessage() {
+      const recipientType = document.getElementById('recipientType').value;
+      const recipientId = document.getElementById('recipientId').value;
+      const subject = document.getElementById('subject').value;
+      const content = document.getElementById('message').value;
+      
+      const resultDiv = document.getElementById('messageResult');
+      
+      try {
+        const response = await fetch('/messages/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            recipient: `${recipientType}:${recipientId}`,
+            subject,
+            content
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          resultDiv.innerHTML = `
+            <div class="alert alert-success">
+              Message sent successfully!
+              <a href="/messages/thread/${result.threadId}" class="btn btn-sm btn-primary mt-2">View Conversation</a>
+            </div>
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <div class="alert alert-danger">
+              Error: ${result.error || result.errors?.map(e => e.msg).join(', ') || 'Unknown error'}
+            </div>
+          `;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="alert alert-danger">
+            Error: ${error.message || 'An unexpected error occurred'}
+          </div>
+        `;
+      }
+      
+      return false; // Prevent form submission
+    } 

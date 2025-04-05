@@ -21,14 +21,42 @@ block content
             padding: 8px 12px;
             font-size: 0.9em;
         }
+        .highlight-card {
+            border: 2px solid #3498db;
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.2);
+        }
+        .badge-message {
+            font-size: 0.7em;
+            vertical-align: top;
+            margin-left: 5px;
+        }
 
     .container.mt-4
         h1.mb-4.text-center UniShared
         h3.mb-4.text-center Driver Dashboard
+        
+        if successMessage
+            .alert.alert-success.alert-dismissible.fade.show= successMessage
+                button.btn-close(type="button" data-bs-dismiss="alert" aria-label="Close")
+        if errorMessage
+            .alert.alert-danger.alert-dismissible.fade.show= errorMessage
+                button.btn-close(type="button" data-bs-dismiss="alert" aria-label="Close")
         if message
             .alert.alert-info= message
 
         .row
+            .col-md-4.mb-4
+                .card.highlight-card
+                    .card-body
+                        h5.card-title
+                            i.bi.bi-envelope.me-2
+                            | Messages
+                            if session && session.unreadMessageCount && session.unreadMessageCount > 0
+                                span.badge.bg-danger.badge-message #{session.unreadMessageCount}
+                        p.card-text View and send messages to passengers and admins
+                        a.btn.btn-primary(href='/messages') View Messages
+                        a.btn.btn-outline-primary.mt-2(href='/messages/new') New Message
+
             .col-md-4.mb-4
                 .card
                     .card-body
@@ -42,6 +70,13 @@ block content
                         h5.card-title My Active Rides
                         p.card-text Manage your current ride commitments
                         a.btn.btn-primary(href='/driver/active-rides') View Active Rides
+
+            .col-md-4.mb-4
+                .card
+                    .card-body
+                        h5.card-title Offer a Ride
+                        p.card-text Create a new ride offering for passengers
+                        a.btn.btn-primary(href='/driver/rides/create') Offer a Ride
 
             .col-md-4.mb-4
                 .card

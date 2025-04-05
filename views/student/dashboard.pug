@@ -14,6 +14,11 @@ block content
               a.btn.btn-primary.btn-lg(href="/student/transport") 
                 i.fas.fa-car.me-2
                 | Transport
+              a.btn.btn-primary.btn-lg(href="/messages")
+                i.bi.bi-envelope.me-2
+                | Messages
+                if session && session.unreadMessageCount && session.unreadMessageCount > 0
+                  span.badge.bg-danger.badge-pill.ms-2 #{session.unreadMessageCount}
               a.btn.btn-primary.btn-lg(href="/student/bookings")
                 i.fas.fa-ticket.me-2
                 | My Bookings
@@ -42,4 +47,9 @@ block content
     .lead {
       color: #000000;
       margin-bottom: 2rem;
+    }
+    .badge-pill {
+      font-size: 0.8rem;
+      padding: 0.25rem 0.5rem;
+      vertical-align: middle;
     } 
