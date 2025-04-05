@@ -5,23 +5,66 @@ block content
     h1.display-5.mb-4.text-center Reviews
     
     .row
-      if reviews && reviews.length
-        .col-lg-8.mb-4
+      .col-lg-8.mb-4
+        // Filters
+        .card.mb-4
+          .card-header.bg-light
+            h5.mb-0 
+              i.bi.bi-funnel.me-2
+              | Filter Reviews
+          .card-body
+            form.filter-form(action="/reviews" method="GET")
+              .row
+                .col-md-4
+                  .form-group.mb-3
+                    label.form-label(for="status") Status
+                    select.form-select(name="status" id="status" onchange="this.form.submit()")
+                      option(value="all", selected=filters.status === 'all') All Statuses
+                      option(value="pending", selected=filters.status === 'pending') Pending
+                      option(value="approved", selected=filters.status === 'approved') Approved
+                      option(value="rejected", selected=filters.status === 'rejected') Rejected
+                .col-md-4
+                  .form-group.mb-3
+                    label.form-label(for="rating") Rating
+                    select.form-select(name="rating" id="rating" onchange="this.form.submit()")
+                      option(value="all", selected=filters.rating === 'all') All Ratings
+                      - for (var i = 5; i >= 1; i--)
+                        option(value=i, selected=filters.rating === i.toString())= i + ' ★' + (i === 1 ? '' : '★'.repeat(i-1))
+                .col-md-4
+                  .form-group.mb-3
+                    label.form-label(for="sort") Sort By
+                    select.form-select(name="sort" id="sort" onchange="this.form.submit()")
+                      option(value="newest", selected=filters.sort === 'newest') Newest First
+                      option(value="oldest", selected=filters.sort === 'oldest') Oldest First
+                      option(value="highest", selected=filters.sort === 'highest') Highest Rated
+                      option(value="lowest", selected=filters.sort === 'lowest') Lowest Rated
+                      option(value="most_helpful", selected=filters.sort === 'most_helpful') Most Helpful
+
+        // Reviews List
+        if reviews && reviews.length
           .card
             .card-header.bg-light
               h4.mb-0 
                 i.bi.bi-star.me-2
-                | Recent Reviews
+                | Reviews 
+                span.badge.bg-primary.ms-2= reviews.length
             .card-body
               each review in reviews
                 .review-card.mb-4.pb-4.border-bottom
                   .row
-                    .col-md-8
+                    .col-md-9
                       h5.mb-2.review-route
                         i.bi.bi-geo-alt.me-1
                         | #{review.pickup_location || 'Unknown'} 
                         i.bi.bi-arrow-right.mx-2
                         | #{review.dropoff_location || 'Unknown'}
+                      
+                      // Status badge
+                      if review.status === 'pending'
+                        span.badge.bg-warning.mb-2 Pending Approval
+                      else if review.status === 'rejected'
+                        span.badge.bg-danger.mb-2 Rejected
+                      
                       .d-flex.align-items-center.mb-3
                         .star-display.me-2
                           - var rating = parseInt(review.rating) || 0
@@ -31,9 +74,37 @@ block content
                             else
                               i.bi.bi-star.text-muted
                         span.text-muted (#{rating}/5)
+                      
                       if review.comment
                         p.review-comment.fst-italic.p-3.bg-light.rounded "#{review.comment}"
-                    .col-md-4.text-md-end
+                      
+                      // Helpful buttons
+                      if review.status === 'approved'
+                        .d-flex.align-items-center.mt-3
+                          form.me-2(action="/reviews/feedback" method="POST")
+                            input(type="hidden" name="reviewId" value=review.review_id)
+                            input(type="hidden" name="isHelpful" value="true")
+                            input(type="hidden" name="userId" value=session.userId || 1)
+                            input(type="hidden" name="userType" value=session.userType || 'passenger')
+                            button.btn.btn-sm.btn-outline-success(type="submit")
+                              i.bi.bi-hand-thumbs-up.me-1
+                              | Helpful (#{review.helpful_count || 0})
+                          
+                          form.me-2(action="/reviews/feedback" method="POST")
+                            input(type="hidden" name="reviewId" value=review.review_id)
+                            input(type="hidden" name="isHelpful" value="false")
+                            input(type="hidden" name="userId" value=session.userId || 1)
+                            input(type="hidden" name="userType" value=session.userType || 'passenger')
+                            button.btn.btn-sm.btn-outline-danger(type="submit")
+                              i.bi.bi-hand-thumbs-down.me-1
+                              | Not Helpful (#{review.unhelpful_count || 0})
+                          
+                          // Report button
+                          button.btn.btn-sm.btn-outline-warning.report-btn(type="button" data-bs-toggle="modal" data-bs-target="#reportModal" data-review-id=review.review_id data-reviewer=review.passenger_name)
+                            i.bi.bi-flag.me-1
+                            | Report
+                          
+                    .col-md-3.text-md-end
                       .review-metadata.text-muted.small
                         p
                           i.bi.bi-person.me-1
@@ -43,11 +114,27 @@ block content
                         p
                           i.bi.bi-calendar.me-1
                           | #{review.created_at ? new Date(review.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown date'}
-      else
-        .col-lg-8.mb-4
+                        
+                        // Admin moderation controls
+                        if session.userType === 'admin' && review.status === 'pending'
+                          form.mt-2(action="/reviews/moderate" method="POST")
+                            input(type="hidden" name="reviewId" value=review.review_id)
+                            .btn-group.w-100
+                              button.btn.btn-sm.btn-success(type="submit" name="status" value="approved")
+                                i.bi.bi-check.me-1
+                                | Approve
+                              button.btn.btn-sm.btn-danger(type="submit" name="status" value="rejected")
+                                i.bi.bi-x.me-1
+                                | Reject
+                          
+                        // View button
+                        a.btn.btn-sm.btn-outline-primary.mt-2(href="/reviews/" + review.review_id) 
+                          i.bi.bi-eye.me-1
+                          | View
+        else
           .alert.alert-info
             i.bi.bi-info-circle.me-2
-            | No reviews found yet. Be the first to leave a review!
+            | No reviews found with the selected filters. Try changing your filter options or be the first to leave a review!
 
       .col-lg-4
         .card
@@ -107,11 +194,91 @@ block content
                   i.bi.bi-send.me-2
                   | Submit Review
 
+        // Review Stats Card
+        if reviews && reviews.length
+          .card.mt-4
+            .card-header.bg-light
+              h4.mb-0 
+                i.bi.bi-graph-up.me-2
+                | Review Stats
+            .card-body
+              - var totalRating = 0
+              - var avgRating = 0
+              - var approvedCount = 0
+              - var pendingCount = 0
+              - var rejectedCount = 0
+              
+              each review in reviews
+                - totalRating += parseInt(review.rating) || 0
+                - if (review.status === 'approved') approvedCount++
+                - if (review.status === 'pending') pendingCount++
+                - if (review.status === 'rejected') rejectedCount++
+              
+              - avgRating = reviews.length ? (totalRating / reviews.length).toFixed(1) : 0
+              
+              .d-flex.justify-content-center.mb-3
+                .display-4.text-center= avgRating
+                .d-flex.flex-column.justify-content-center.ms-2
+                  .star-display
+                    - for (var i = 1; i <= 5; i++)
+                      if i <= Math.round(avgRating)
+                        i.bi.bi-star-fill.text-warning
+                      else
+                        i.bi.bi-star.text-muted
+                  small.text-muted Average rating
+              
+              .row.text-center.mt-3
+                .col-4
+                  .h3.text-success= approvedCount
+                  small.text-muted Approved
+                .col-4
+                  .h3.text-warning= pendingCount
+                  small.text-muted Pending
+                .col-4
+                  .h3.text-danger= rejectedCount
+                  small.text-muted Rejected
+
     .text-center.mt-4
       a.btn.btn-secondary(href="/")
         i.bi.bi-house.me-2
         | Back to Home
 
+  // Report Review Modal
+  #reportModal.modal.fade(tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true")
+    .modal-dialog
+      .modal-content
+        .modal-header
+          h5#reportModalLabel.modal-title Report Review
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        .modal-body
+          form#reportForm(action="/reviews/report" method="POST")
+            input#reportReviewId(type="hidden" name="reviewId")
+            input(type="hidden" name="reporterId" value=session.userId || 1)
+            input(type="hidden" name="reporterType" value=session.userType || 'passenger')
+            
+            .mb-3
+              p.mb-2 You are reporting a review by:
+              p#reviewAuthor.fw-bold
+            
+            .mb-3
+              label.form-label(for="reason") Reason for Report
+              select.form-select(name="reason" id="reason" required)
+                option(value="") Select a reason...
+                option(value="inappropriate") Inappropriate Content
+                option(value="false_information") False Information
+                option(value="spam") Spam
+                option(value="offensive") Offensive Language
+                option(value="other") Other
+            
+            .mb-3
+              label.form-label(for="description") Description
+              textarea.form-control(name="description" id="description" rows="3" placeholder="Please explain why you're reporting this review...")
+            
+            .d-grid
+              button.btn.btn-danger(type="submit")
+                i.bi.bi-flag.me-2
+                | Submit Report
+                
   style.
     .star-item {
       font-size: 2rem;
@@ -177,4 +344,20 @@ block content
         
         form.classList.add('was-validated');
       });
+      
+      // Report modal functionality
+      const reportModal = document.getElementById('reportModal');
+      if (reportModal) {
+        reportModal.addEventListener('show.bs.modal', function(event) {
+          const button = event.relatedTarget;
+          const reviewId = button.getAttribute('data-review-id');
+          const reviewer = button.getAttribute('data-reviewer');
+          
+          const reviewAuthor = document.getElementById('reviewAuthor');
+          const reportReviewId = document.getElementById('reportReviewId');
+          
+          reviewAuthor.textContent = reviewer || 'Anonymous';
+          reportReviewId.value = reviewId;
+        });
+      }
     }); 

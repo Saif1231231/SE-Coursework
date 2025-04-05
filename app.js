@@ -41,6 +41,8 @@ const authRoutes = require("../routes/auth");
 const profileRoutes = require("../routes/profile");
 const messagesRoutes = require("../routes/messages");
 const reportsRoutes = require("../routes/reports");
+const userReportsRoutes = require("../routes/user-reports");
+const apiRoutes = require("../routes/api");
 
 // ✅ Register Routes
 app.use("/auth", authRoutes);
@@ -52,6 +54,8 @@ app.use("/driver", driverRoutes);
 app.use("/profile", profileRoutes);
 app.use("/messages", messagesRoutes);
 app.use("/reports", reportsRoutes);
+app.use("/user-reports", userReportsRoutes);
+app.use("/api", apiRoutes);
 
 // Import messaging service to ensure tables exist
 const messageService = require('../services/messaging');

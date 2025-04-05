@@ -1,0 +1,172 @@
+extends ../layout
+
+block content
+  .container.py-5
+    h1.display-5.mb-4 User Reports
+    
+    // Filters
+    .card.mb-4
+      .card-header.bg-light
+        h5.mb-0
+          i.bi.bi-funnel.me-2
+          | Filter Reports
+      .card-body
+        form.filter-form(action="/user-reports" method="GET")
+          .row
+            .col-md-6
+              .form-group.mb-3
+                label.form-label(for="status") Status
+                select.form-select(name="status" id="status" onchange="this.form.submit()")
+                  option(value="all", selected=filters.status === 'all') All Statuses
+                  option(value="pending", selected=filters.status === 'pending') Pending
+                  option(value="investigating", selected=filters.status === 'investigating') Investigating
+                  option(value="resolved", selected=filters.status === 'resolved') Resolved
+                  option(value="dismissed", selected=filters.status === 'dismissed') Dismissed
+            .col-md-6
+              .form-group.mb-3
+                label.form-label(for="type") User Type
+                select.form-select(name="type" id="type" onchange="this.form.submit()")
+                  option(value="all", selected=filters.type === 'all') All Types
+                  option(value="passenger", selected=filters.type === 'passenger') Passengers
+                  option(value="driver", selected=filters.type === 'driver') Drivers
+    
+    // Reports List
+    .card
+      .card-header.bg-light
+        h4.mb-0
+          i.bi.bi-flag.me-2
+          | Reports 
+          span.badge.bg-primary.ms-2= reports.length
+      .card-body.p-0
+        .table-responsive
+          table.table.table-hover.mb-0
+            thead.table-light
+              tr
+                th Reporter
+                th Reported User
+                th Reason
+                th Submitted
+                th Status
+                th Actions
+            tbody
+              if reports && reports.length
+                each report in reports
+                  tr(class=report.status === 'pending' ? 'table-warning' : report.status === 'investigating' ? 'table-primary' : report.status === 'resolved' ? 'table-success' : report.status === 'dismissed' ? 'table-secondary' : '')
+                    td.align-middle #{report.reporter_name || 'Anonymous'}
+                    td.align-middle #{report.reported_name || 'Unknown'}
+                    td.align-middle 
+                      span.text-capitalize #{report.reason.replace(/_/g, ' ')}
+                    td.align-middle
+                      small.text-muted #{report.created_at ? new Date(report.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown'}
+                    td.align-middle
+                      if report.status === 'pending'
+                        span.badge.bg-warning.text-dark Pending
+                      else if report.status === 'investigating'
+                        span.badge.bg-primary Investigating
+                      else if report.status === 'resolved'
+                        span.badge.bg-success Resolved
+                      else if report.status === 'dismissed'
+                        span.badge.bg-secondary Dismissed
+                    td.align-middle
+                      a.btn.btn-sm.btn-outline-primary(href="/user-reports/" + report.report_id)
+                        i.bi.bi-eye.me-1
+                        | View
+              else
+                tr
+                  td.text-center.py-4(colspan="6") 
+                    .alert.alert-info.mb-0
+                      i.bi.bi-info-circle.me-2
+                      | No reports found with the selected filters.
+    
+    // Create Report Button
+    .mt-4.text-center
+      button.btn.btn-danger(type="button" data-bs-toggle="modal" data-bs-target="#createReportModal")
+        i.bi.bi-flag.me-2
+        | Create New Report
+    
+  // Create Report Modal
+  #createReportModal.modal.fade(tabindex="-1" aria-labelledby="createReportModalLabel" aria-hidden="true")
+    .modal-dialog.modal-lg
+      .modal-content
+        .modal-header
+          h5#createReportModalLabel.modal-title Report a User
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        .modal-body
+          form#reportForm(action="/user-reports/create" method="POST")
+            input(type="hidden" name="reporterId" value=user.id || 1)
+            input(type="hidden" name="reporterType" value=user.type || 'admin')
+            
+            .row.mb-3
+              .col-md-6
+                label.form-label(for="reportedType") User Type
+                select.form-select(name="reportedType" id="reportedType" required)
+                  option(value="") Select type...
+                  option(value="passenger") Passenger
+                  option(value="driver") Driver
+              
+              .col-md-6.reported-user-container
+                label.form-label(for="reportedId") User
+                select.form-select(name="reportedId" id="reportedId" required disabled)
+                  option(value="") First select user type...
+            
+            .mb-3
+              label.form-label(for="reason") Reason for Report
+              select.form-select(name="reason" id="reason" required)
+                option(value="") Select a reason...
+                option(value="inappropriate_behavior") Inappropriate Behavior
+                option(value="safety_concern") Safety Concern
+                option(value="fraud") Fraud
+                option(value="discrimination") Discrimination
+                option(value="harassment") Harassment
+                option(value="other") Other
+            
+            .mb-3
+              label.form-label(for="description") Description
+              textarea.form-control(name="description" id="description" rows="4" placeholder="Please provide details about the issue..." required)
+            
+            .d-grid
+              button.btn.btn-danger(type="submit")
+                i.bi.bi-flag.me-2
+                | Submit Report
+  
+  script.
+    document.addEventListener('DOMContentLoaded', function() {
+      // Handle user type selection for report modal
+      const reportedTypeSelect = document.getElementById('reportedType');
+      const reportedIdSelect = document.getElementById('reportedId');
+      
+      if (reportedTypeSelect && reportedIdSelect) {
+        reportedTypeSelect.addEventListener('change', function() {
+          const selectedType = reportedTypeSelect.value;
+          
+          // Clear current options
+          reportedIdSelect.innerHTML = '';
+          reportedIdSelect.disabled = true;
+          
+          if (!selectedType) {
+            reportedIdSelect.innerHTML = '<option value="">First select user type...</option>';
+            return;
+          }
+          
+          // Fetch users based on type
+          fetch(`/api/users?type=${selectedType}`)
+            .then(response => response.json())
+            .then(users => {
+              reportedIdSelect.innerHTML = '<option value="">Select user...</option>';
+              
+              users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = user.name;
+                reportedIdSelect.appendChild(option);
+              });
+              
+              reportedIdSelect.disabled = false;
+            })
+            .catch(error => {
+              console.error('Error fetching users:', error);
+              reportedIdSelect.innerHTML = '<option value="">Error loading users</option>';
+            });
+        });
+      }
+    }); 

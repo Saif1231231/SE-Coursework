@@ -1,0 +1,262 @@
+extends ../layout
+
+block content
+  .container.py-5
+    .mb-4
+      a.btn.btn-outline-secondary(href="/user-reports")
+        i.bi.bi-arrow-left.me-2
+        | Back to Reports
+    
+    .row
+      .col-lg-8
+        .card.mb-4
+          .card-header
+            h4.mb-0
+              i.bi.bi-flag.me-2
+              | Report Details
+          .card-body
+            // Status badge
+            .mb-4
+              if report.status === 'pending'
+                span.badge.bg-warning.py-2.px-3.text-dark Pending Review
+              else if report.status === 'investigating'
+                span.badge.bg-primary.py-2.px-3 Under Investigation
+              else if report.status === 'resolved'
+                span.badge.bg-success.py-2.px-3 Resolved
+              else if report.status === 'dismissed'
+                span.badge.bg-secondary.py-2.px-3 Dismissed
+            
+            // People involved
+            .row.mb-4
+              .col-md-6
+                h5.text-muted Reporter
+                p.mb-1
+                  strong Name: 
+                  | #{report.reporter_name || 'Anonymous'}
+                if report.reporter_email
+                  p.mb-1
+                    strong Email: 
+                    | #{report.reporter_email}
+                p.mb-1
+                  strong Type: 
+                  span.text-capitalize #{report.reporter_type || 'Unknown'}
+              
+              .col-md-6
+                h5.text-muted Reported User
+                p.mb-1
+                  strong Name: 
+                  | #{report.reported_name || 'Unknown'}
+                if report.reported_email
+                  p.mb-1
+                    strong Email: 
+                    | #{report.reported_email}
+                p.mb-1
+                  strong Type: 
+                  span.text-capitalize #{report.reported_type || 'Unknown'}
+            
+            // Report details
+            .mb-4
+              h5.text-muted Report Details
+              p.mb-1
+                strong Reason: 
+                span.text-capitalize #{report.reason.replace(/_/g, ' ')}
+              if report.description
+                .mt-2
+                  strong Description:
+                  .p-3.bg-light.rounded.mt-2 #{report.description}
+            
+            // Dates
+            .row.mb-4
+              .col-md-6
+                h5.text-muted Submitted
+                p.mb-0
+                  i.bi.bi-calendar.me-2
+                  | #{report.created_at ? new Date(report.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown'}
+              
+              if report.resolved_at
+                .col-md-6
+                  h5.text-muted Resolved
+                  p.mb-0
+                    i.bi.bi-calendar-check.me-2
+                    | #{report.resolved_at ? new Date(report.resolved_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown'}
+            
+            // Resolution notes
+            if report.resolution_notes
+              .mb-4
+                h5.text-muted Resolution Notes
+                .p-3.bg-light.rounded #{report.resolution_notes}
+          
+        // Admin actions card
+        if user.type === 'admin' && (report.status === 'pending' || report.status === 'investigating')
+          .card.mb-4.border-primary
+            .card-header.bg-primary.text-white
+              h5.mb-0 Admin Actions
+            .card-body
+              form(action="/user-reports/update-status" method="POST")
+                input(type="hidden" name="reportId" value=report.report_id)
+                
+                .mb-3
+                  label.form-label(for="status") Update Status
+                  select.form-select(name="status" id="status")
+                    option(value="pending", selected=report.status === 'pending') Pending
+                    option(value="investigating", selected=report.status === 'investigating') Investigating
+                    option(value="resolved") Resolved
+                    option(value="dismissed") Dismissed
+                
+                .mb-3
+                  label.form-label(for="resolutionNotes") Resolution Notes
+                  textarea.form-control(name="resolutionNotes" id="resolutionNotes" rows="3" placeholder="Add notes about the resolution or next steps...")= report.resolution_notes
+                
+                .d-grid.gap-2
+                  button.btn.btn-primary(type="submit")
+                    i.bi.bi-save.me-2
+                    | Update Status
+        
+        // User sanctions card
+        if user.type === 'admin'
+          .card.mb-4.border-danger
+            .card-header.bg-danger.text-white
+              h5.mb-0 User Sanctions
+            .card-body
+              form(action="/user-reports/take-action" method="POST")
+                input(type="hidden" name="reportId" value=report.report_id)
+                input(type="hidden" name="userId" value=report.reported_id)
+                input(type="hidden" name="userType" value=report.reported_type)
+                
+                .d-grid.gap-2
+                  button.btn.btn-danger.mb-2(type="submit" name="action" value="suspend")
+                    i.bi.bi-x-circle.me-2
+                    | Suspend User
+                  button.btn.btn-outline-success(type="submit" name="action" value="unsuspend")
+                    i.bi.bi-check-circle.me-2
+                    | Unsuspend User
+      
+      .col-lg-4
+        // Other reports card
+        if otherReports && otherReports.length
+          .card.mb-4
+            .card-header.bg-light
+              h5.mb-0 
+                i.bi.bi-exclamation-triangle.me-2
+                | Other Reports for this User
+                span.badge.bg-danger.ms-2= otherReports.length
+            .card-body.p-0
+              .list-group.list-group-flush
+                each otherReport in otherReports
+                  a.list-group-item.list-group-item-action(href="/user-reports/" + otherReport.report_id)
+                    .d-flex.w-100.justify-content-between
+                      h6.mb-1.text-capitalize #{otherReport.reason.replace(/_/g, ' ')}
+                      if otherReport.status === 'pending'
+                        span.badge.bg-warning.text-dark Pending
+                      else if otherReport.status === 'investigating'
+                        span.badge.bg-primary Investigating
+                      else if otherReport.status === 'resolved'
+                        span.badge.bg-success Resolved
+                      else if otherReport.status === 'dismissed'
+                        span.badge.bg-secondary Dismissed
+                    p.mb-1
+                      | Reported by: #{otherReport.reporter_name || 'Anonymous'}
+                    small.text-muted
+                      i.bi.bi-calendar.me-1
+                      | #{otherReport.created_at ? new Date(otherReport.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown'}
+        
+        // Create new report card
+        .card
+          .card-header.bg-light
+            h5.mb-0 Actions
+          .card-body
+            button.btn.btn-danger.w-100(type="button" data-bs-toggle="modal" data-bs-target="#createReportModal")
+              i.bi.bi-flag.me-2
+              | Create New Report
+  
+  // Create Report Modal
+  #createReportModal.modal.fade(tabindex="-1" aria-labelledby="createReportModalLabel" aria-hidden="true")
+    .modal-dialog.modal-lg
+      .modal-content
+        .modal-header
+          h5#createReportModalLabel.modal-title Report a User
+          button.btn-close(type="button" data-bs-dismiss="modal" aria-label="Close")
+        .modal-body
+          form#reportForm(action="/user-reports/create" method="POST")
+            input(type="hidden" name="reporterId" value=user.id || 1)
+            input(type="hidden" name="reporterType" value=user.type || 'admin')
+            
+            .row.mb-3
+              .col-md-6
+                label.form-label(for="reportedType") User Type
+                select.form-select(name="reportedType" id="reportedType" required)
+                  option(value="") Select type...
+                  option(value="passenger") Passenger
+                  option(value="driver") Driver
+              
+              .col-md-6.reported-user-container
+                label.form-label(for="reportedId") User
+                select.form-select(name="reportedId" id="reportedId" required disabled)
+                  option(value="") First select user type...
+            
+            .mb-3
+              label.form-label(for="reason") Reason for Report
+              select.form-select(name="reason" id="reason" required)
+                option(value="") Select a reason...
+                option(value="inappropriate_behavior") Inappropriate Behavior
+                option(value="safety_concern") Safety Concern
+                option(value="fraud") Fraud
+                option(value="discrimination") Discrimination
+                option(value="harassment") Harassment
+                option(value="other") Other
+            
+            .mb-3
+              label.form-label(for="description") Description
+              textarea.form-control(name="description" id="description" rows="4" placeholder="Please provide details about the issue..." required)
+            
+            .d-grid
+              button.btn.btn-danger(type="submit")
+                i.bi.bi-flag.me-2
+                | Submit Report
+                
+  style.
+    .badge {
+      font-size: 0.85rem;
+    }
+    
+  script.
+    document.addEventListener('DOMContentLoaded', function() {
+      // Handle user type selection for report modal
+      const reportedTypeSelect = document.getElementById('reportedType');
+      const reportedIdSelect = document.getElementById('reportedId');
+      
+      if (reportedTypeSelect && reportedIdSelect) {
+        reportedTypeSelect.addEventListener('change', function() {
+          const selectedType = reportedTypeSelect.value;
+          
+          // Clear current options
+          reportedIdSelect.innerHTML = '';
+          reportedIdSelect.disabled = true;
+          
+          if (!selectedType) {
+            reportedIdSelect.innerHTML = '<option value="">First select user type...</option>';
+            return;
+          }
+          
+          // Fetch users based on type
+          fetch(`/api/users?type=${selectedType}`)
+            .then(response => response.json())
+            .then(users => {
+              reportedIdSelect.innerHTML = '<option value="">Select user...</option>';
+              
+              users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = user.name;
+                reportedIdSelect.appendChild(option);
+              });
+              
+              reportedIdSelect.disabled = false;
+            })
+            .catch(error => {
+              console.error('Error fetching users:', error);
+              reportedIdSelect.innerHTML = '<option value="">Error loading users</option>';
+            });
+        });
+      }
+    }); 
