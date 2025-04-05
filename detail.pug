@@ -1,0 +1,166 @@
+extends ../layout
+
+block content
+  .container.py-5
+    .mb-4
+      a.btn.btn-outline-secondary.btn-sm(href="/reports")
+        i.bi.bi-arrow-left.me-2
+        | Back to Reports
+    
+    h1.display-5.mb-3 Report Details
+    
+    //- Report Summary Card
+    .card.mb-4
+      .card-header.bg-light.d-flex.justify-content-between.align-items-center
+        h4.mb-0 
+          i.bi.bi-exclamation-triangle.me-2
+          | ##{report.report_id}: #{report.report_title}
+        span.badge.rounded-pill.ms-2(class=report.status === 'pending' ? 'bg-warning' : report.status === 'under_review' ? 'bg-info' : report.status === 'resolved' ? 'bg-success' : 'bg-secondary')
+          | #{report.status.replace('_', ' ')}
+      
+      .card-body
+        .row
+          .col-md-8
+            .mb-3
+              h5.mb-1 Report Information
+              p.mb-0
+                | Submitted: 
+                strong #{report.formatted_created_at ? new Date(report.formatted_created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown date'}
+              
+              if report.category_name
+                p.mb-0
+                  | Category: 
+                  span.badge.bg-secondary #{report.category_name}
+            
+            .mb-3
+              h5.mb-1 People Involved
+              p.mb-0
+                | Passenger: 
+                strong #{report.passenger_name || 'Unknown'}
+              p.mb-0
+                | Driver: 
+                strong #{report.driver_name || 'Unknown'}
+            
+            if report.pickup_location && report.dropoff_location
+              .mb-3
+                h5.mb-1 Ride Details
+                p.mb-0
+                  i.bi.bi-geo-alt.me-1
+                  | #{report.pickup_location} 
+                  i.bi.bi-arrow-right.mx-2
+                  | #{report.dropoff_location}
+                if report.ride_time
+                  p.mb-0
+                    i.bi.bi-calendar.me-1
+                    | #{report.ride_time}
+            
+            .mb-3
+              h5.mb-1 Issue Description
+              .p-3.bg-light.rounded.border
+                p.report-description.mb-0 #{report.report_description}
+          
+          .col-md-4
+            //- Admin controls (only for admin)
+            if userType === 'admin'
+              .card.mb-3
+                .card-header.bg-light
+                  h5.mb-0 Admin Actions
+                .card-body
+                  form(action=`/reports/${report.report_id}/update-status` method="POST")
+                    .form-group.mb-3
+                      label.form-label(for="status") Update Status
+                      select.form-select(name="status" id="status")
+                        option(value="pending" selected=report.status === 'pending') Pending
+                        option(value="under_review" selected=report.status === 'under_review') Under Review
+                        option(value="resolved" selected=report.status === 'resolved') Resolved
+                        option(value="dismissed" selected=report.status === 'dismissed') Dismissed
+                    
+                    .form-group.mb-3
+                      label.form-label(for="adminNotes") Admin Notes
+                      textarea.form-control(name="adminNotes" id="adminNotes" rows="3") #{report.admin_notes || ''}
+                    
+                    .form-group.mb-3
+                      label.form-label(for="resolution") Resolution Details
+                      textarea.form-control(name="resolution" id="resolution" rows="3") #{report.resolution_details || ''}
+                    
+                    .d-grid
+                      button.btn.btn-primary(type="submit")
+                        i.bi.bi-check-circle.me-2
+                        | Update Report
+            
+            //- Evidence files
+            if evidence && evidence.length
+              .card.mb-3
+                .card-header.bg-light
+                  h5.mb-0 Evidence Files
+                .card-body
+                  ul.list-group
+                    each file in evidence
+                      li.list-group-item
+                        a.d-flex.align-items-center(href=file.file_path target="_blank")
+                          i.bi.bi-file-earmark.me-2
+                          span #{file.file_name}
+    
+    //- Admin Notes/Resolution (visible to all users when present)
+    if (report.admin_notes || report.resolution_details) && report.status !== 'pending'
+      .card.mb-4
+        .card-header.bg-light
+          h4.mb-0
+            i.bi.bi-check-circle.me-2
+            | Admin Response
+        .card-body
+          if report.admin_notes
+            h5 Notes
+            .p-3.bg-light.rounded.border.mb-3
+              p.mb-0 #{report.admin_notes}
+          
+          if report.resolution_details
+            h5 Resolution
+            .p-3.bg-light.rounded.border
+              p.mb-0 #{report.resolution_details}
+    
+    //- Comments Section
+    .card.mb-4
+      .card-header.bg-light
+        h4.mb-0
+          i.bi.bi-chat-dots.me-2
+          | Discussion (#{comments ? comments.length : 0})
+      .card-body
+        if comments && comments.length
+          .comments-container
+            each comment in comments
+              .comment.mb-3.pb-3.border-bottom
+                .d-flex.justify-content-between
+                  .comment-header
+                    strong #{comment.user_name || 'Unknown'}
+                    span.badge.ms-2(class=comment.user_type === 'passenger' ? 'bg-primary' : comment.user_type === 'driver' ? 'bg-success' : 'bg-dark')
+                      | #{comment.user_type}
+                  small.text-muted #{comment.formatted_created_at ? new Date(comment.formatted_created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown date'}
+                p.mt-2.mb-0 #{comment.comment}
+        else
+          .alert.alert-info.mb-0
+            | No comments yet. Be the first to add a comment.
+        
+        //- Comment Form
+        form.mt-4(action=`/reports/${report.report_id}/comment` method="POST")
+          .form-group.mb-3
+            label.form-label(for="comment") Add Comment
+            textarea.form-control(name="comment" id="comment" rows="3" placeholder="Add a comment..." required)
+          
+          .d-grid
+            button.btn.btn-primary(type="submit")
+              i.bi.bi-send.me-2
+              | Post Comment
+  
+  style.
+    .report-description {
+      white-space: pre-wrap;
+    }
+    
+    .comment {
+      transition: background-color 0.2s ease;
+    }
+    
+    .comment:hover {
+      background-color: rgba(0,0,0,0.01);
+    } 

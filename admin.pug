@@ -1,0 +1,155 @@
+extends ../layout
+
+block content
+  .container.py-5
+    h1.display-5.mb-4.text-center Reports Administration
+    
+    //- Stats Summary
+    .row.mb-4
+      .col-md-3
+        .card.text-white.bg-primary.mb-3
+          .card-body.text-center
+            h2.display-4.mb-0 #{reports.filter(r => r.status === 'pending').length}
+            p.mb-0 Pending Reports
+      
+      .col-md-3
+        .card.text-white.bg-info.mb-3
+          .card-body.text-center
+            h2.display-4.mb-0 #{reports.filter(r => r.status === 'under_review').length}
+            p.mb-0 Under Review
+      
+      .col-md-3
+        .card.text-white.bg-success.mb-3
+          .card-body.text-center
+            h2.display-4.mb-0 #{reports.filter(r => r.status === 'resolved').length}
+            p.mb-0 Resolved
+      
+      .col-md-3
+        .card.text-white.bg-secondary.mb-3
+          .card-body.text-center
+            h2.display-4.mb-0 #{reports.filter(r => r.status === 'dismissed').length}
+            p.mb-0 Dismissed
+    
+    //- Filter Controls
+    .card.mb-4
+      .card-body
+        .row
+          .col-md-8
+            .input-group
+              input.form-control#report-search(type="text" placeholder="Search reports...")
+              button.btn.btn-outline-secondary(type="button")
+                i.bi.bi-search
+          
+          .col-md-4
+            select.form-select#status-filter
+              option(value="all") All Statuses
+              option(value="pending") Pending
+              option(value="under_review") Under Review
+              option(value="resolved") Resolved
+              option(value="dismissed") Dismissed
+    
+    //- Reports Table
+    .card
+      .card-header.bg-light
+        h4.mb-0 
+          i.bi.bi-exclamation-triangle.me-2
+          | All Reports
+      .card-body.p-0
+        .table-responsive
+          table.table.table-hover.table-striped.mb-0
+            thead.table-light
+              tr
+                th ID
+                th Title
+                th Passenger
+                th Driver
+                th Category
+                th Submitted
+                th Status
+                th Actions
+            tbody#reports-table
+              each report in reports
+                tr.report-row(data-status=report.status)
+                  td #{report.report_id}
+                  td
+                    strong #{report.report_title}
+                    if report.pickup_location && report.dropoff_location
+                      .small.text-muted
+                        | #{report.pickup_location} to #{report.dropoff_location}
+                  td #{report.passenger_name || 'Unknown'}
+                  td #{report.driver_name || 'Unknown'}
+                  td
+                    span.badge.bg-secondary #{report.category_name || 'Uncategorized'}
+                  td.small #{report.formatted_created_at ? new Date(report.formatted_created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown'}
+                  td
+                    span.badge.rounded-pill(class=report.status === 'pending' ? 'bg-warning' : report.status === 'under_review' ? 'bg-info' : report.status === 'resolved' ? 'bg-success' : 'bg-secondary')
+                      | #{report.status.replace('_', ' ')}
+                  td
+                    a.btn.btn-sm.btn-primary(href=`/reports/${report.report_id}`)
+                      i.bi.bi-eye.me-1
+                      | View
+      
+      .card-footer.bg-light
+        .d-flex.justify-content-between.align-items-center
+          .showing-info.text-muted.small Showing all #{reports.length} reports
+  
+  style.
+    .report-row {
+      cursor: pointer;
+    }
+  
+  script.
+    document.addEventListener('DOMContentLoaded', function() {
+      // Make table rows clickable
+      const reportRows = document.querySelectorAll('.report-row');
+      reportRows.forEach(row => {
+        row.addEventListener('click', function() {
+          const reportId = this.querySelector('td:first-child').textContent.trim();
+          window.location.href = `/reports/${reportId}`;
+        });
+      });
+      
+      // Status filter functionality
+      const statusFilter = document.getElementById('status-filter');
+      statusFilter.addEventListener('change', function() {
+        const filterValue = this.value;
+        
+        reportRows.forEach(row => {
+          if (filterValue === 'all' || row.dataset.status === filterValue) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+        
+        // Update the showing info
+        updateShowingInfo();
+      });
+      
+      // Search functionality
+      const searchInput = document.getElementById('report-search');
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        reportRows.forEach(row => {
+          const rowText = row.textContent.toLowerCase();
+          if (rowText.includes(searchTerm)) {
+            if (statusFilter.value === 'all' || row.dataset.status === statusFilter.value) {
+              row.style.display = '';
+            }
+          } else {
+            row.style.display = 'none';
+          }
+        });
+        
+        // Update the showing info
+        updateShowingInfo();
+      });
+      
+      // Function to update showing info text
+      function updateShowingInfo() {
+        const visibleRows = document.querySelectorAll('.report-row[style=""]').length;
+        const showingInfo = document.querySelector('.showing-info');
+        showingInfo.textContent = `Showing ${visibleRows} of ${reportRows.length} reports`;
+      }
+    }); 

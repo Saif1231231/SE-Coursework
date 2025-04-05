@@ -1,0 +1,190 @@
+extends ../layout
+
+block content
+  .container.py-5
+    h1.display-5.mb-4.text-center
+      if userType === 'passenger'
+        | My Driver Reports
+      else if userType === 'driver'
+        | Reports About Me
+      else
+        | Reports
+
+    .row
+      //- Reports List
+      .col-lg-8.order-2.order-lg-1
+        if reports && reports.length
+          .card.mb-4
+            .card-header.bg-light
+              h4.mb-0 
+                i.bi.bi-exclamation-triangle.me-2
+                if userType === 'passenger'
+                  | My Submitted Reports
+                else if userType === 'driver'
+                  | Reports Filed Against Me
+                else
+                  | All Reports
+            .card-body
+              each report in reports
+                .report-card.mb-4.pb-4.border-bottom
+                  .row
+                    .col-md-8
+                      h5.mb-2.fw-bold #{report.report_title}
+                      p.mb-2
+                        span.badge.rounded-pill(class=report.status === 'pending' ? 'bg-warning' : report.status === 'under_review' ? 'bg-info' : report.status === 'resolved' ? 'bg-success' : 'bg-secondary')
+                          | #{report.status.replace('_', ' ')}
+                      
+                      .mb-3.small
+                        if report.pickup_location && report.dropoff_location
+                          .text-muted
+                            i.bi.bi-geo-alt.me-1
+                            | #{report.pickup_location} 
+                            i.bi.bi-arrow-right.mx-1
+                            | #{report.dropoff_location}
+                      
+                      p.report-description.text-truncate-3 #{report.report_description}
+                      
+                      if userType === 'passenger'
+                        p.mb-1.small
+                          | Reported Driver: 
+                          strong #{report.driver_name || 'Unknown'}
+                      else if userType === 'driver'
+                        p.mb-1.small
+                          | Reported By: 
+                          strong #{report.passenger_name || 'Unknown'}
+                      
+                      if report.category_name
+                        p.mb-1.small
+                          | Category: 
+                          span.badge.bg-secondary #{report.category_name}
+                    
+                    .col-md-4.text-md-end.mt-3.mt-md-0
+                      .report-metadata.text-muted.small
+                        p.mb-1
+                          i.bi.bi-calendar.me-1
+                          | #{report.formatted_created_at ? new Date(report.formatted_created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown date'}
+                        
+                        a.btn.btn-sm.btn-outline-primary.mt-2(href=`/reports/${report.report_id}`)
+                          i.bi.bi-eye.me-1
+                          | View Details
+          
+          if !reports.length
+            .alert.alert-info.mb-4
+              i.bi.bi-info-circle.me-2
+              if userType === 'passenger'
+                | You haven't submitted any reports yet.
+              else if userType === 'driver'
+                | No reports have been filed against you.
+              else
+                | No reports found.
+        
+      //- New Report Form (only for passengers)
+      if userType === 'passenger'
+        .col-lg-4.order-1.order-lg-2.mb-4
+          .card.sticky-top.report-form-card
+            .card-header.bg-light
+              h4.mb-0 
+                i.bi.bi-exclamation-circle.me-2
+                | Report a Driver
+            .card-body
+              form.needs-validation(action="/reports/create" method="POST" enctype="multipart/form-data" novalidate)
+                .form-group.mb-3
+                  label.form-label(for="title") Report Title *
+                  input.form-control(type="text" name="title" id="title" placeholder="Brief description of the issue" required)
+                  .invalid-feedback Please provide a title for your report.
+                
+                .form-group.mb-3
+                  label.form-label(for="driverId") Select Driver *
+                  select.form-select(name="driverId" id="driverId" required)
+                    option(value="") Choose a driver...
+                    each driver in drivers || []
+                      option(value=driver.driver_id) #{driver.name}
+                  .invalid-feedback Please select a driver to report.
+                
+                .form-group.mb-3
+                  label.form-label(for="categoryId") Issue Category
+                  select.form-select(name="categoryId" id="categoryId")
+                    option(value="") Select category...
+                    each category in categories || []
+                      option(value=category.category_id) #{category.name}
+                  .form-text Select the category that best describes the issue.
+                
+                .form-group.mb-3
+                  label.form-label(for="rideId") Related Ride (Optional)
+                  select.form-select(name="rideId" id="rideId")
+                    option(value="") Select ride...
+                    each ride in rides || []
+                      if ride.driver_id
+                        option(value=ride.ride_id data-driver=ride.driver_id) #{ride.pickup_location} to #{ride.dropoff_location} (#{ride.driver_name})
+                  .form-text If this report is about a specific ride, please select it.
+                
+                .form-group.mb-3
+                  label.form-label(for="description") Detailed Description *
+                  textarea.form-control(name="description" id="description" rows="5" placeholder="Please provide details about the issue..." required)
+                  .invalid-feedback Please provide a detailed description.
+                
+                .form-group.mb-4
+                  label.form-label Evidence (Optional)
+                  .input-group
+                    input.form-control(type="file" name="evidence" id="evidence" multiple accept="image/*,.pdf,.doc,.docx")
+                  .form-text.small You can upload up to 5 files (images, PDFs, or documents) as evidence. Max 5MB each.
+                
+                .d-grid
+                  button.btn.btn-primary(type="submit")
+                    i.bi.bi-send.me-2
+                    | Submit Report
+
+    .text-center.mt-4
+      a.btn.btn-secondary(href="/")
+        i.bi.bi-house.me-2
+        | Back to Home
+
+  style.
+    .text-truncate-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .report-form-card {
+      top: 2rem;
+    }
+    
+    .report-card {
+      transition: all 0.2s ease;
+    }
+    
+    .report-card:hover {
+      background-color: rgba(0,0,0,0.01);
+    }
+  
+  script.
+    document.addEventListener('DOMContentLoaded', function() {
+      // Form validation
+      const form = document.querySelector('.needs-validation');
+      if (form) {
+        form.addEventListener('submit', function(event) {
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          form.classList.add('was-validated');
+        });
+      }
+      
+      // Auto-select driver when ride is selected
+      const rideSelect = document.getElementById('rideId');
+      const driverSelect = document.getElementById('driverId');
+      
+      if (rideSelect && driverSelect) {
+        rideSelect.addEventListener('change', function() {
+          const selectedOption = this.options[this.selectedIndex];
+          const driverId = selectedOption.getAttribute('data-driver');
+          
+          if (driverId) {
+            driverSelect.value = driverId;
+          }
+        });
+      }
+    }); 
