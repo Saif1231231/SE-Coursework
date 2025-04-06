@@ -1,0 +1,244 @@
+extends layout
+
+block head
+  link(rel='stylesheet', href='https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css')
+  script(src='https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js')
+
+block content
+  .container.py-4
+    h1.mb-4 
+      i.bi.bi-bar-chart-fill.me-2
+      | API Usage Dashboard
+    
+    p.lead Track and monitor external API usage across the application
+    
+    .row.mb-4
+      .col-md-3
+        .card.shadow-sm.bg-primary.text-white
+          .card-body.text-center
+            h5.card-title Total API Calls
+            h2.mb-0= usageStats.totalCalls
+      
+      .col-md-3
+        .card.shadow-sm.bg-success.text-white
+          .card-body.text-center
+            h5.card-title Success Rate
+            h2.mb-0= usageStats.successRate + '%'
+      
+      .col-md-3
+        .card.shadow-sm.bg-info.text-white
+          .card-body.text-center
+            h5.card-title Avg Response Time
+            h2.mb-0= usageStats.averageResponseTime + 'ms'
+      
+      .col-md-3
+        .card.shadow-sm.bg-warning.text-dark
+          .card-body.text-center
+            h5.card-title Last Hour
+            h2.mb-0= usageStats.lastHourCalls + ' calls'
+    
+    .row.mb-4
+      .col-lg-8
+        .card.shadow-sm
+          .card-header.bg-light
+            h5.mb-0 API Calls by Service (Last 6 Hours)
+          .card-body
+            canvas#apiCallsChart(height='250')
+      
+      .col-lg-4
+        .card.shadow-sm.h-100
+          .card-header.bg-light
+            h5.mb-0 Service Distribution
+          .card-body
+            canvas#distributionChart(height='250')
+    
+    .row.mb-4
+      .col-12
+        .card.shadow-sm
+          .card-header.bg-light
+            h5.mb-0 API Usage Details
+          .card-body
+            table.table.table-striped.table-hover
+              thead
+                tr
+                  th(scope='col') Service
+                  th(scope='col') Calls
+                  th(scope='col') Avg. Response Time
+                  th(scope='col') Success Rate
+                  th(scope='col') Status
+              tbody
+                tr
+                  td 
+                    i.bi.bi-cloud.me-2.text-primary
+                    | Weather API
+                  td= usageStats.weatherApiCalls
+                  td 192ms
+                  td 97.4%
+                  td
+                    span.badge.bg-success Healthy
+                tr
+                  td 
+                    i.bi.bi-geo-alt.me-2.text-danger
+                    | Geocoding API
+                  td= usageStats.geocodingApiCalls
+                  td 210ms
+                  td 95.8%
+                  td
+                    span.badge.bg-success Healthy
+                tr
+                  td 
+                    i.bi.bi-map.me-2.text-info
+                    | Distance API
+                  td= usageStats.distanceApiCalls
+                  td 175ms
+                  td 98.2%
+                  td
+                    span.badge.bg-success Healthy
+    
+    .row
+      .col-md-6
+        .card.shadow-sm
+          .card-header.bg-light
+            h5.mb-0 Rate Limiting Status
+          .card-body
+            table.table.table-sm
+              thead
+                tr
+                  th Service
+                  th Limit
+                  th Current Usage
+                  th Status
+              tbody
+                tr
+                  td Weather API
+                  td 60 calls/min
+                  td 12 calls/min
+                  td
+                    .progress(style='height: 10px')
+                      .progress-bar.bg-success(style='width: 20%', role='progressbar')
+                tr
+                  td Geocoding API
+                  td 100 calls/min
+                  td 25 calls/min
+                  td
+                    .progress(style='height: 10px')
+                      .progress-bar.bg-success(style='width: 25%', role='progressbar')
+                tr
+                  td Distance API
+                  td 50 calls/min
+                  td 8 calls/min
+                  td
+                    .progress(style='height: 10px')
+                      .progress-bar.bg-success(style='width: 16%', role='progressbar')
+      
+      .col-md-6
+        .card.shadow-sm
+          .card-header.bg-light
+            h5.mb-0 Peak Usage Times
+          .card-body
+            p.mb-2 Peak hour: #{usageStats.peakHour}
+            table.table.table-sm
+              thead
+                tr
+                  th Time
+                  th Calls
+                  th Distribution
+              tbody
+                each val, index in usageStats.timeLabels
+                  - const totalHourCalls = usageStats.callsByService.weather[index] + usageStats.callsByService.geocoding[index] + usageStats.callsByService.distance[index]
+                  tr
+                    td= val
+                    td= totalHourCalls
+                    td
+                      .progress(style='height: 6px')
+                        .progress-bar.bg-primary(style=`width: ${usageStats.callsByService.weather[index]/totalHourCalls*100}%`, role='progressbar')
+                        .progress-bar.bg-danger(style=`width: ${usageStats.callsByService.geocoding[index]/totalHourCalls*100}%`, role='progressbar')
+                        .progress-bar.bg-info(style=`width: ${usageStats.callsByService.distance[index]/totalHourCalls*100}%`, role='progressbar')
+
+block scripts
+  script.
+    document.addEventListener('DOMContentLoaded', function() {
+      // Line chart for API calls over time
+      const timeCtx = document.getElementById('apiCallsChart').getContext('2d');
+      new Chart(timeCtx, {
+        type: 'line',
+        data: {
+          labels: !{JSON.stringify(usageStats.timeLabels)},
+          datasets: [
+            {
+              label: 'Weather API',
+              data: !{JSON.stringify(usageStats.callsByService.weather)},
+              backgroundColor: 'rgba(13, 110, 253, 0.2)',
+              borderColor: 'rgba(13, 110, 253, 1)',
+              borderWidth: 2,
+              tension: 0.2
+            },
+            {
+              label: 'Geocoding API',
+              data: !{JSON.stringify(usageStats.callsByService.geocoding)},
+              backgroundColor: 'rgba(220, 53, 69, 0.2)',
+              borderColor: 'rgba(220, 53, 69, 1)',
+              borderWidth: 2,
+              tension: 0.2
+            },
+            {
+              label: 'Distance API',
+              data: !{JSON.stringify(usageStats.callsByService.distance)},
+              backgroundColor: 'rgba(13, 202, 240, 0.2)',
+              borderColor: 'rgba(13, 202, 240, 1)',
+              borderWidth: 2,
+              tension: 0.2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Number of API Calls'
+              }
+            }
+          }
+        }
+      });
+      
+      // Doughnut chart for API distribution
+      const distCtx = document.getElementById('distributionChart').getContext('2d');
+      new Chart(distCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Weather API', 'Geocoding API', 'Distance API'],
+          datasets: [{
+            data: [
+              #{usageStats.weatherApiCalls},
+              #{usageStats.geocodingApiCalls},
+              #{usageStats.distanceApiCalls}
+            ],
+            backgroundColor: [
+              'rgba(13, 110, 253, 0.8)',
+              'rgba(220, 53, 69, 0.8)',
+              'rgba(13, 202, 240, 0.8)'
+            ],
+            borderColor: [
+              'rgba(13, 110, 253, 1)',
+              'rgba(220, 53, 69, 1)',
+              'rgba(13, 202, 240, 1)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }); 

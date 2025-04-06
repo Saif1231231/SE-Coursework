@@ -49,10 +49,30 @@ html
       .nav-link {
         color: #2C3E50 !important;
         font-weight: 500;
-        padding: 0.5rem 1rem;
+        padding: 0.5rem 1rem !important;
+        white-space: nowrap !important;
       }
       .nav-link:hover {
         color: #3498db !important;
+      }
+      .navbar-nav {
+        align-items: center !important;
+      }
+      .navbar-collapse {
+        justify-content: flex-end !important;
+      }
+      .dropdown-toggle::after {
+        vertical-align: middle !important;
+      }
+      /* Profile icon styling */
+      .profile-icon {
+        margin-right: 5px;
+        font-size: 1.1rem;
+      }
+      /* Make sure dropdown menu is properly aligned */
+      .dropdown-menu {
+        right: 0 !important;
+        left: auto !important;
       }
       .btn-primary {
         background-color: #3498db;
@@ -142,14 +162,30 @@ html
                 a.nav-link(href="/student/favorites") 
                   i.bi.bi-bookmark-star.me-1
                   | Saved Routes
+              li.nav-item
+                a.nav-link(href="/rides/smart-match")
+                  i.bi.bi-lightning-charge.me-1
+                  | Smart Match
+              li.nav-item
+                a.nav-link(href="/reports")
+                  i.bi.bi-exclamation-circle.me-1
+                  | Report Driver
             else if session && session.userType === 'driver'
               li.nav-item
                 a.nav-link(href="/driver") Driver Dashboard
               li.nav-item
                 a.nav-link(href="/driver/rides/create") Offer a Ride
+              li.nav-item
+                a.nav-link(href="/reports")
+                  i.bi.bi-exclamation-triangle-fill.me-1
+                  | My Reports
             else if session && session.userType === 'admin'
               li.nav-item
                 a.nav-link(href="/admin") Admin Dashboard
+              li.nav-item
+                a.nav-link(href="/reports/admin")
+                  i.bi.bi-exclamation-triangle.me-1
+                  | Manage Reports
             else if !session || !session.userId
               li.nav-item
                 a.nav-link(href="/rides") Rides
@@ -159,7 +195,7 @@ html
             if session && session.userId
               li.nav-item.dropdown
                 a.nav-link.dropdown-toggle#userDropdown(href="#", role="button", data-bs-toggle="dropdown", aria-expanded="false")
-                  | #{session.name}
+                  | Profile
                 ul.dropdown-menu.dropdown-menu-end(aria-labelledby="userDropdown")
                   if session.userType === 'passenger'
                     li
@@ -168,14 +204,30 @@ html
                       a.dropdown-item(href="/student/bookings") My Bookings
                     li
                       a.dropdown-item(href="/student/favorites") Saved Routes
+                    li
+                      a.dropdown-item(href="/rides/smart-match")
+                        i.bi.bi-lightning-charge.me-1
+                        | Smart Ride Matching
+                    li
+                      a.dropdown-item(href="/reports")
+                        i.bi.bi-exclamation-circle.me-1
+                        | Report Driver
                   else if session.userType === 'driver'
                     li
                       a.dropdown-item(href="/driver") Dashboard
                     li
                       a.dropdown-item(href="/driver/rides/create") Offer a Ride
+                    li
+                      a.dropdown-item(href="/reports")
+                        i.bi.bi-exclamation-triangle-fill.me-1
+                        | My Reports
                   else if session.userType === 'admin'
                     li
                       a.dropdown-item(href="/admin") Dashboard
+                    li
+                      a.dropdown-item(href="/reports/admin")
+                        i.bi.bi-exclamation-triangle.me-1
+                        | Manage Reports
                   li
                     a.dropdown-item(href="/messages")
                       i.bi.bi-envelope.me-1
@@ -190,7 +242,8 @@ html
                     a.dropdown-item(href="/auth/logout") Logout
             else
               li.nav-item
-                a.nav-link(href="/auth/login") Login/Register
+                a.nav-link(href="/auth/login")
+                  | Login/Register
 
     .container.mt-4
       // Alert container for showing messages

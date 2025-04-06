@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../services/db");
+const externalApiService = require('../services/external-apis');
 
 // Get users for reporting
 router.get("/users", async (req, res) => {
@@ -117,6 +118,95 @@ router.get("/report-stats/:userId/:userType", async (req, res) => {
         console.error("Error fetching report stats:", err);
         res.status(500).json({ error: "Database error" });
     }
+});
+
+// API route for geocoding an address
+router.get('/geocode', async (req, res) => {
+  try {
+    const { address } = req.query;
+    
+    if (!address) {
+      return res.status(400).json({ 
+        error: 'Address parameter is required' 
+      });
+    }
+    
+    const geocodeResult = await externalApiService.geocodeAddress(address);
+    res.json(geocodeResult);
+  } catch (error) {
+    console.error('Geocoding API error:', error);
+    res.status(500).json({ 
+      error: 'Error geocoding address',
+      message: error.message
+    });
+  }
+});
+
+// API route for fetching weather data
+router.get('/weather', async (req, res) => {
+  try {
+    const { location } = req.query;
+    
+    if (!location) {
+      return res.status(400).json({ 
+        error: 'Location parameter is required' 
+      });
+    }
+    
+    const weatherData = await externalApiService.getWeatherForecast(location);
+    res.json(weatherData);
+  } catch (error) {
+    console.error('Weather API error:', error);
+    res.status(500).json({ 
+      error: 'Error fetching weather data',
+      message: error.message
+    });
+  }
+});
+
+// API route for calculating distance between two points
+router.get('/distance', async (req, res) => {
+  try {
+    const { origin, destination } = req.query;
+    
+    if (!origin || !destination) {
+      return res.status(400).json({ 
+        error: 'Both origin and destination parameters are required' 
+      });
+    }
+    
+    // Parse coordinates from query params (format: "lat,lng")
+    const [originLat, originLng] = origin.split(',').map(coord => parseFloat(coord));
+    const [destLat, destLng] = destination.split(',').map(coord => parseFloat(coord));
+    
+    // Check if coordinates are valid numbers
+    if (isNaN(originLat) || isNaN(originLng) || isNaN(destLat) || isNaN(destLng)) {
+      return res.status(400).json({ 
+        error: 'Invalid coordinates format. Use "lat,lng" for both origin and destination.' 
+      });
+    }
+    
+    const distanceData = await externalApiService.calculateDistance(
+      { lat: originLat, lng: originLng },
+      { lat: destLat, lng: destLng }
+    );
+    
+    res.json(distanceData);
+  } catch (error) {
+    console.error('Distance API error:', error);
+    res.status(500).json({ 
+      error: 'Error calculating distance',
+      message: error.message
+    });
+  }
+});
+
+// Basic health check API
+router.get('/status', (req, res) => {
+  res.json({ 
+    status: 'ok',
+    message: 'API is running' 
+  });
 });
 
 module.exports = router; 

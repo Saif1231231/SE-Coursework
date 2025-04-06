@@ -1,4 +1,6 @@
 const db = require('./db');
+const pointsService = require('./points');
+const externalApiService = require('./external-apis');
 
 /**
  * Find matching rides for a passenger
@@ -305,10 +307,331 @@ async function cancelBooking(bookingId, userId, userType) {
   }
 }
 
+/**
+ * Advanced matching that considers more factors 
+ * for a more personalized ride-matching experience
+ * @param {Object} criteria - Search criteria
+ * @param {string} criteria.pickupLocation - The pickup location
+ * @param {string} criteria.dropoffLocation - The dropoff location
+ * @param {Date} criteria.departureTime - The departure time
+ * @param {number} criteria.maxDistance - Maximum distance willing to travel (in miles/km)
+ * @param {number} criteria.maxPrice - Maximum price willing to pay
+ * @param {number} criteria.passengerId - The passenger ID (to exclude own rides)
+ * @param {Object} preferences - Optional user preferences
+ * @param {number} preferences.minDriverRating - Minimum acceptable driver rating
+ * @param {boolean} preferences.preferFemaleDriver - Preference for female drivers
+ * @param {boolean} preferences.needsAccessibility - Requires accessible vehicle
+ * @param {string[]} preferences.preferredVehicleTypes - Preferred vehicle types
+ * @param {boolean} preferences.avoidHighways - Preference to avoid highways
+ * @param {boolean} preferences.considerWeather - Consider weather conditions
+ * @returns {Promise<Array>} Array of matching rides with scoring
+ */
+async function findAdvancedMatches(criteria, preferences = {}) {
+  try {
+    // Get basic matching rides first
+    const basicMatches = await findMatchingRides(criteria);
+    
+    if (!basicMatches || basicMatches.length === 0) {
+      return [];
+    }
+    
+    // If no passenger ID is provided, we can't do personalized matching
+    if (!criteria.passengerId) {
+      return basicMatches;
+    }
+    
+    // Get passenger's ride history
+    const [rideHistory] = await db.query(`
+      SELECT 
+        r.ride_id,
+        r.driver_id,
+        r.pickup_location,
+        r.dropoff_location,
+        b.booking_status,
+        rev.rating
+      FROM booking b
+      JOIN ride r ON b.ride_id = r.ride_id
+      LEFT JOIN review rev ON rev.ride_id = r.ride_id AND rev.reviewer_id = b.passenger_id
+      WHERE b.passenger_id = ?
+      ORDER BY r.departureTime DESC
+      LIMIT 20
+    `, [criteria.passengerId]);
+    
+    // Get passenger's favorite routes
+    const [favoriteRoutes] = await db.query(`
+      SELECT 
+        fr.pickup_location,
+        fr.dropoff_location,
+        COUNT(*) as frequency,
+        MAX(fr.last_used) as last_used
+      FROM favorite_routes fr
+      WHERE fr.passenger_id = ?
+      GROUP BY fr.pickup_location, fr.dropoff_location
+      ORDER BY frequency DESC
+      LIMIT 5
+    `, [criteria.passengerId]);
+    
+    // Get passenger's preferred drivers (ones they've rated highly)
+    const [preferredDrivers] = await db.query(`
+      SELECT 
+        r.driver_id,
+        d.name as driver_name,
+        AVG(rev.rating) as avg_rating,
+        COUNT(rev.review_id) as review_count
+      FROM review rev
+      JOIN ride r ON rev.ride_id = r.ride_id
+      JOIN driver d ON r.driver_id = d.driver_id
+      WHERE rev.reviewer_id = ? AND rev.rating >= 4
+      GROUP BY r.driver_id
+      ORDER BY avg_rating DESC
+    `, [criteria.passengerId]);
+    
+    // Get geocoding for the pickup location
+    let pickupCoordinates = null;
+    try {
+      const geocodeResult = await externalApiService.geocodeAddress(criteria.pickupLocation);
+      if (geocodeResult && geocodeResult.coordinates) {
+        pickupCoordinates = geocodeResult.coordinates;
+      }
+    } catch (error) {
+      console.warn('Could not geocode pickup location:', error);
+    }
+    
+    // Get geocoding for the dropoff location
+    let dropoffCoordinates = null;
+    try {
+      const geocodeResult = await externalApiService.geocodeAddress(criteria.dropoffLocation);
+      if (geocodeResult && geocodeResult.coordinates) {
+        dropoffCoordinates = geocodeResult.coordinates;
+      }
+    } catch (error) {
+      console.warn('Could not geocode dropoff location:', error);
+    }
+    
+    // Weather API integration
+    let weatherData = null;
+    try {
+      if (preferences.considerWeather !== false) {
+        weatherData = await externalApiService.getWeatherForecast(criteria.pickupLocation);
+      }
+    } catch (error) {
+      console.warn('Could not fetch weather data:', error);
+    }
+    
+    // Get user points (for potential reward rides)
+    let userPoints = 0;
+    try {
+      const pointsResult = await pointsService.getUserPointsHistory(criteria.passengerId, 'passenger');
+      if (pointsResult.success) {
+        userPoints = pointsResult.points;
+      }
+    } catch (error) {
+      console.warn('Could not fetch user points:', error);
+    }
+
+    // Calculate accurate distances if coordinates are available
+    let distanceData = {};
+    if (pickupCoordinates && dropoffCoordinates) {
+      try {
+        distanceData = await externalApiService.calculateDistance(
+          pickupCoordinates,
+          dropoffCoordinates
+        );
+      } catch (error) {
+        console.warn('Could not calculate distance:', error);
+      }
+    }
+
+    // Score and rank the matches based on all factors
+    const scoredMatches = await Promise.all(basicMatches.map(async (ride) => {
+      let score = 100; // Base score
+      const matchFactors = [];
+      
+      // Factor 1: Driver rating match with preferences
+      if (preferences.minDriverRating && ride.driver_rating) {
+        if (ride.driver_rating >= preferences.minDriverRating) {
+          score += 15;
+          matchFactors.push('High-rated driver');
+        } else {
+          score -= 10;
+        }
+      }
+      
+      // Factor 2: Previously used and highly rated drivers
+      const preferredDriver = preferredDrivers.find(d => d.driver_id === ride.driver_id);
+      if (preferredDriver) {
+        score += 20;
+        matchFactors.push('Preferred driver');
+      }
+      
+      // Factor 3: Favorite route match
+      const isFavoriteRoute = favoriteRoutes.some(
+        fr => ride.pickup_location.includes(fr.pickup_location) && 
+              ride.dropoff_location.includes(fr.dropoff_location)
+      );
+      if (isFavoriteRoute) {
+        score += 25;
+        matchFactors.push('Favorite route');
+      }
+
+      // Factor 4: Time proximity to requested time
+      const requestedTime = new Date(criteria.departureTime).getTime();
+      const rideTime = new Date(ride.departureTime).getTime();
+      const timeDiffMinutes = Math.abs(requestedTime - rideTime) / (60 * 1000);
+      
+      if (timeDiffMinutes < 15) {
+        score += 15;
+        matchFactors.push('Departure time is perfect');
+      } else if (timeDiffMinutes < 30) {
+        score += 10;
+        matchFactors.push('Departure time is close');
+      }
+      
+      // Factor 5: Weather conditions
+      if (weatherData && weatherData.current) {
+        const vehicleTypes = ride.vehicle_type ? ride.vehicle_type.toLowerCase() : '';
+        
+        // Rainy conditions
+        if (weatherData.current.is_rainy || weatherData.current.precipitation_chance > 50) {
+          if (vehicleTypes.includes('car') || vehicleTypes.includes('sedan') || vehicleTypes.includes('suv')) {
+            score += 15;
+            matchFactors.push('Weather-appropriate vehicle (rain protection)');
+          } else {
+            score -= 10;
+            matchFactors.push('Not ideal for current weather');
+          }
+        }
+        
+        // High winds
+        if (weatherData.current.wind_speed > 20) {
+          if (vehicleTypes.includes('bicycle') || vehicleTypes.includes('scooter') || vehicleTypes.includes('motorbike')) {
+            score -= 15;
+            matchFactors.push('Not ideal for current weather (high winds)');
+          }
+        }
+        
+        // Very hot weather
+        if (weatherData.current.temp > 30) { // >30°C / 86°F
+          if (vehicleTypes.includes('car') && ride.features && ride.features.includes('air_conditioning')) {
+            score += 10;
+            matchFactors.push('Air conditioned vehicle (hot weather)');
+          }
+        }
+      }
+      
+      // Factor 6: Distance accuracy and route optimization using calculated distance
+      if (distanceData && distanceData.distance) {
+        // Compare actual route distance with linear distance
+        const routeDistance = parseFloat(distanceData.distance.text);
+        
+        // If ride has a specified route distance
+        if (ride.estimated_distance) {
+          const estimatedDistance = parseFloat(ride.estimated_distance);
+          const distanceDiff = Math.abs(routeDistance - estimatedDistance);
+          
+          // If the estimated distance is reasonably close to calculated distance
+          if (distanceDiff / routeDistance < 0.1) { // Within 10%
+            score += 10;
+            matchFactors.push('Accurate route estimation');
+          }
+        }
+        
+        // Check if avoiding highways preference matches
+        if (preferences.avoidHighways && ride.route_features && ride.route_features.includes('no_highways')) {
+          score += 10;
+          matchFactors.push('Avoids highways as preferred');
+        }
+      }
+      
+      // Factor 7: Price as a percentage of max price (lower is better)
+      if (criteria.maxPrice) {
+        const priceRatio = ride.fare / criteria.maxPrice;
+        if (priceRatio < 0.7) {
+          score += 15;
+          matchFactors.push('Great price');
+        } else if (priceRatio < 0.9) {
+          score += 5;
+          matchFactors.push('Good price');
+        }
+      }
+      
+      // Factor 8: Calculate time efficiency
+      if (distanceData && distanceData.duration) {
+        const durMinutes = distanceData.duration.value / 60;
+        
+        // If we have the ride's estimated duration
+        if (ride.estimated_duration) {
+          const estimatedDuration = parseFloat(ride.estimated_duration);
+          const durationDiff = Math.abs(durMinutes - estimatedDuration);
+          
+          if (durationDiff / durMinutes < 0.15) { // Within 15%
+            score += 5;
+            matchFactors.push('Accurate time estimation');
+          }
+        }
+        
+        // Compare with standard transit times
+        if (ride.estimated_duration && durMinutes < ride.estimated_duration * 0.8) {
+          score += 15;
+          matchFactors.push('Faster than average');
+        }
+      }
+      
+      // Factor 9: Accessibility preference match
+      if (preferences.needsAccessibility) {
+        if (ride.features && ride.features.includes('accessibility')) {
+          score += 25; // High priority factor
+          matchFactors.push('Accessible vehicle available');
+        } else {
+          score = 0; // Disqualify if accessibility needed but not available
+          matchFactors.push('Does not meet accessibility requirements');
+        }
+      }
+      
+      // Factor 10: Driver gender preference
+      if (preferences.preferFemaleDriver) {
+        // We'd need to check driver's gender from database
+        const [driverDetails] = await db.query('SELECT gender FROM driver WHERE driver_id = ?', [ride.driver_id]);
+        if (driverDetails.length > 0 && driverDetails[0].gender === 'female') {
+          score += 15;
+          matchFactors.push('Female driver as preferred');
+        }
+      }
+      
+      // Return the ride with its score, matching factors and additional data
+      return {
+        ...ride,
+        match_score: Math.min(100, Math.max(0, Math.round(score))), // Ensure score is 0-100
+        match_factors: matchFactors,
+        weather_info: weatherData ? {
+          conditions: weatherData.current.conditions,
+          temp: weatherData.current.temp,
+          is_rainy: weatherData.current.is_rainy
+        } : null,
+        distance_info: distanceData ? {
+          distance: distanceData.distance?.text,
+          duration: distanceData.duration?.text
+        } : null
+      };
+    }));
+    
+    // Filter out any rides with score 0 (disqualified)
+    const validMatches = scoredMatches.filter(match => match.match_score > 0);
+    
+    // Sort by score (descending)
+    return validMatches.sort((a, b) => b.match_score - a.match_score);
+  } catch (error) {
+    console.error('Error in advanced matching:', error);
+    // Fall back to basic matching if advanced fails
+    return findMatchingRides(criteria);
+  }
+}
+
 module.exports = {
   findMatchingRides,
   findPotentialPassengers,
   matchPassengerToRide,
   confirmBooking,
-  cancelBooking
+  cancelBooking,
+  findAdvancedMatches
 }; 

@@ -1,6 +1,74 @@
 extends ../layout
 
 block content
+  style.
+    .card {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      margin-bottom: 1rem;
+    }
+    .form-label {
+      font-weight: 500;
+      color: #2C3E50;
+    }
+    .ride-info strong {
+      color: #2C3E50;
+      display: inline-block;
+      width: 120px;
+    }
+    #map-container {
+      height: 300px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      margin-top: 10px;
+    }
+    /* Navigation bar fixes */
+    .navbar .navbar-nav .nav-item {
+      margin: 0 2px;
+    }
+    .navbar .nav-link {
+      padding: 0.5rem 1rem !important;
+      font-size: 1rem !important;
+      white-space: nowrap !important;
+      color: #2C3E50 !important;
+    }
+    .navbar-nav {
+      align-items: center !important;
+    }
+    .navbar-collapse {
+      justify-content: flex-end !important;
+    }
+    .dropdown-toggle::after {
+      vertical-align: middle !important;
+    }
+    /* Ensure dropdown menu is properly aligned and displayed */
+    .dropdown-menu {
+      right: 0 !important;
+      left: auto !important;
+    }
+    /* Add profile icon styling */
+    .profile-icon {
+      margin-right: 5px;
+      font-size: 1.1rem;
+    }
+    /* Make sure profile text is visible */
+    #userDropdown {
+      display: flex !important;
+      align-items: center !important;
+      min-width: 100px !important;
+    }
+    .profile-text {
+      display: inline-block !important;
+      margin-left: 5px !important;
+    }
+    .search-card {
+      margin-bottom: 2rem;
+    }
+  
+  // Add Leaflet CSS
+  link(rel='stylesheet', href='https://unpkg.com/leaflet@1.7.1/dist/leaflet.css')
+  
   .container.py-5
     h1.display-5.mb-4.text-center Find a Ride
     
@@ -19,9 +87,9 @@ block content
           .alert.alert-danger.alert-dismissible.fade.show= errorMessage
             button.btn-close(type="button" data-bs-dismiss="alert" aria-label="Close")
         
-        .card.mb-4
+        .card.search-card
           .card-body
-            form(action="/student/transport/search" method="POST")
+            form(action="/student/transport/search" method="POST" id="ride-search-form")
               .mb-3
                 label.form-label(for="whereFrom") Where From?
                 input.form-control(
@@ -45,18 +113,36 @@ block content
               .d-grid
                 button.btn.btn-primary(type="submit") Search Rides
 
+    // Map section - always shown, changes with search
+    .row.justify-content-center.mb-4
+      .col-md-8
+        .card
+          .card-header.bg-light
+            h5.mb-0 Route Map
+          .card-body.p-2
+            #map-container
+            .text-center.mt-2.text-muted
               if searchQuery && searchQuery.whereFrom && searchQuery.whereTo
-                form.mt-3(action="/student/favorites/add" method="POST")
-                  input(type="hidden" name="pickup_location" value=searchQuery.whereFrom)
-                  input(type="hidden" name="dropoff_location" value=searchQuery.whereTo)
-                  input(type="hidden" name="redirect" value="/student/transport")
-                  button.btn.btn-outline-primary.d-flex.align-items-center.justify-content-center.w-100(type="submit")
-                    i.bi.bi-bookmark-plus.me-2
-                    | Save This Route
+                p Showing route from #{searchQuery.whereFrom} to #{searchQuery.whereTo}
+              else
+                p Select pickup and destination locations to find rides
+              small Using example map coordinates for demonstration
+
+    if searchQuery && searchQuery.whereFrom && searchQuery.whereTo
+      .row.justify-content-center
+        .col-md-8
+          form.mb-4(action="/student/favorites/add" method="POST")
+            input(type="hidden" name="pickup_location" value=searchQuery.whereFrom)
+            input(type="hidden" name="dropoff_location" value=searchQuery.whereTo)
+            input(type="hidden" name="redirect" value="/student/transport")
+            button.btn.btn-outline-primary.d-flex.align-items-center.justify-content-center.w-100(type="submit")
+              i.bi.bi-bookmark-plus.me-2
+              | Save This Route
 
     if rides && rides.length
       .row.justify-content-center
         .col-md-8
+          h4.mb-3 Available Rides
           each ride in rides
             .card.mb-3
               .card-body
@@ -85,7 +171,7 @@ block content
                       i.bi.bi-bookmark-plus.me-1
                       | Save as Favorite
                   a.btn.btn-primary(href=`/student/book-ride/${ride.ride_id}`) Book This Ride
-    else
+    else if searchQuery && searchQuery.whereFrom && searchQuery.whereTo
       .row.justify-content-center
         .col-md-8
           .alert.alert-secondary.text-center No available rides found matching your criteria.
@@ -96,19 +182,114 @@ block content
         a.btn.btn-outline-primary.ms-2(href="/student/favorites") 
           i.bi.bi-bookmark-star.me-1
           | My Favorites
-
-  style.
-    .card {
-      border: 1px solid #eee;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .form-label {
-      font-weight: 500;
-      color: #2C3E50;
-    }
-    .ride-info strong {
-      color: #2C3E50;
-      display: inline-block;
-      width: 120px;
-    } 
+  
+  // Add Leaflet JS and initialize map
+  script(src='https://unpkg.com/leaflet@1.7.1/dist/leaflet.js')
+  script.
+    // Initialize map immediately when the DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      const mapContainer = document.getElementById('map-container');
+      
+      if (mapContainer) {
+        console.log('Map container found, initializing map');
+        
+        try {
+          // UK map center
+          const ukCenter = [54.7023, -3.2765];
+          
+          // Initialize map with UK center
+          const map = L.map('map-container').setView(ukCenter, 5);
+          
+          // Add OpenStreetMap tiles
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }).addTo(map);
+          
+          const hasSearchQuery = #{searchQuery && searchQuery.whereFrom && searchQuery.whereTo ? 'true' : 'false'};
+          
+          if (hasSearchQuery) {
+            // If we have search parameters, show the route
+            const pickup = "#{searchQuery ? searchQuery.whereFrom : ''}";
+            const dropoff = "#{searchQuery ? searchQuery.whereTo : ''}";
+            
+            // Add markers for London and Manchester as example points
+            const londonCoords = [51.5074, -0.1278];
+            const manchesterCoords = [53.4808, -2.2426];
+            
+            // Use London as pickup and Manchester as dropoff for demo
+            const pickupMarker = L.marker(londonCoords).addTo(map)
+              .bindPopup(`<b>Pickup:</b> ${pickup}`);
+            
+            const dropoffMarker = L.marker(manchesterCoords).addTo(map)
+              .bindPopup(`<b>Dropoff:</b> ${dropoff}`);
+            
+            // Draw a line between the two points
+            const route = L.polyline([londonCoords, manchesterCoords], {color: 'blue'}).addTo(map);
+            
+            // Fit map to show both markers
+            const bounds = L.latLngBounds(londonCoords, manchesterCoords);
+            map.fitBounds(bounds.pad(0.1));
+          } else {
+            // If no search yet, just show some major UK cities as examples
+            const cities = [
+              { name: "London", coords: [51.5074, -0.1278] },
+              { name: "Manchester", coords: [53.4808, -2.2426] },
+              { name: "Edinburgh", coords: [55.9533, -3.1883] },
+              { name: "Birmingham", coords: [52.4862, -1.8904] }
+            ];
+            
+            // Add markers for major cities
+            cities.forEach(city => {
+              L.marker(city.coords).addTo(map)
+                .bindPopup(`<b>${city.name}</b>`);
+            });
+          }
+          
+          console.log('Map initialized successfully');
+          
+          // Force a resize to ensure map renders correctly
+          setTimeout(function() {
+            map.invalidateSize();
+          }, 100);
+        } catch (error) {
+          console.error('Error initializing map:', error);
+          mapContainer.innerHTML = '<div class="alert alert-danger m-2">Error loading map</div>';
+        }
+      } else {
+        console.error('Map container not found');
+      }
+    });
+    
+  // Add script to add profile icon to nav dropdown
+  script.
+    document.addEventListener('DOMContentLoaded', function() {
+      // Fix for navigation items
+      // Ensure the dropdown menu shows "Profile" text
+      const userDropdown = document.getElementById('userDropdown');
+      if (userDropdown) {
+        // Either fix the existing username or set it to "Profile" if empty
+        const username = userDropdown.textContent.trim();
+        if (!username || username === '') {
+          userDropdown.innerHTML = `<i class="bi bi-person-circle profile-icon"></i><span class="profile-text">Profile</span>`;
+        } else {
+          userDropdown.innerHTML = `<i class="bi bi-person-circle profile-icon"></i><span class="profile-text">${username}</span>`;
+        }
+      } else {
+        // If dropdown doesn't exist, look for the navbar and add a profile link
+        const navbar = document.querySelector('.navbar-nav');
+        if (navbar) {
+          // Check if we need to add a profile link
+          const profileLink = document.querySelector('.navbar-nav a[href="/profile"]');
+          if (!profileLink) {
+            const li = document.createElement('li');
+            li.className = 'nav-item';
+            li.innerHTML = `
+              <a class="nav-link" href="/profile">
+                <i class="bi bi-person-circle profile-icon"></i>Profile
+              </a>
+            `;
+            navbar.appendChild(li);
+          }
+        }
+      }
+    });

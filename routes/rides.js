@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../services/db");
+const matchingService = require("../services/matching");
+const externalApiService = require('../services/external-apis');
 
 // Show Available Rides
 router.get("/", async (req, res) => {
@@ -213,6 +215,152 @@ router.get("/:rideId", async (req, res) => {
     } catch (err) {
         console.error("Error fetching ride details:", err);
         res.status(500).send("Database error: " + err.message);
+    }
+});
+
+// Smart Ride Matching route - uses the advanced matching algorithm
+router.get("/smart-match", async (req, res) => {
+    try {
+        // Get search parameters from query string
+        const { 
+            pickupLocation, 
+            dropoffLocation, 
+            departureTime, 
+            maxPrice,
+            minDriverRating,
+            preferFemaleDriver,
+            needsAccessibility,
+            preferredVehicleType,
+            avoidHighways,
+            considerWeather
+        } = req.query;
+        
+        // Validate required parameters
+        if (!pickupLocation || !dropoffLocation) {
+            return res.render("smart-match", { 
+                rides: [],
+                errorMessage: "Please provide both pickup and dropoff locations",
+                searchParams: req.query
+            });
+        }
+        
+        // Get weather forecast for the pickup location
+        let weatherData = null;
+        try {
+            if (considerWeather !== 'false') {
+                weatherData = await externalApiService.getWeatherForecast(pickupLocation);
+            }
+        } catch (error) {
+            console.warn('Could not fetch weather data:', error);
+        }
+        
+        // Get geocoding for the locations
+        let locationData = {};
+        try {
+            const pickupGeocode = await externalApiService.geocodeAddress(pickupLocation);
+            const dropoffGeocode = await externalApiService.geocodeAddress(dropoffLocation);
+            
+            // If both geocodes are valid, calculate the distance
+            if (pickupGeocode && pickupGeocode.coordinates && 
+                dropoffGeocode && dropoffGeocode.coordinates) {
+                
+                const distanceData = await externalApiService.calculateDistance(
+                    pickupGeocode.coordinates,
+                    dropoffGeocode.coordinates
+                );
+                
+                locationData = {
+                    pickup: pickupGeocode,
+                    dropoff: dropoffGeocode,
+                    distance: distanceData
+                };
+            }
+        } catch (error) {
+            console.warn('Could not fetch location data:', error);
+        }
+        
+        // Format search criteria for the matching service
+        const searchCriteria = {
+            pickupLocation,
+            dropoffLocation,
+            departureTime: departureTime ? new Date(departureTime) : new Date(),
+            maxPrice: maxPrice ? parseFloat(maxPrice) : null,
+            passengerId: req.session.userId || null
+        };
+        
+        // Format user preferences
+        const userPreferences = {
+            minDriverRating: minDriverRating ? parseFloat(minDriverRating) : null,
+            preferFemaleDriver: preferFemaleDriver === 'true',
+            needsAccessibility: needsAccessibility === 'true',
+            preferredVehicleTypes: preferredVehicleType ? 
+                [preferredVehicleType] : ['car', 'sedan', 'suv', 'van'],
+            avoidHighways: avoidHighways === 'true',
+            considerWeather: considerWeather === 'true'
+        };
+        
+        // Use the advanced matching service to find matching rides
+        const matchingRides = await matchingService.findAdvancedMatches(searchCriteria, userPreferences);
+        
+        // Render the results
+        res.render("smart-match", { 
+            rides: matchingRides, 
+            searchParams: req.query,
+            showAdvancedOptions: true,
+            useAdvancedMatching: true,
+            weatherData: weatherData,
+            locationData: locationData,
+            successMessage: matchingRides.length > 0 
+                ? `Found ${matchingRides.length} matching rides!` 
+                : "No matching rides found. Try adjusting your search criteria."
+        });
+    } catch (err) {
+        console.error("Error in smart matching:", err);
+        res.render("smart-match", { 
+            rides: [],
+            errorMessage: "An error occurred while finding matching rides: " + err.message,
+            searchParams: req.query,
+            showAdvancedOptions: true,
+            useAdvancedMatching: true
+        });
+    }
+});
+
+// Book a ride using the matching service
+router.post("/book/:rideId", async (req, res) => {
+    try {
+        // Ensure user is logged in
+        if (!req.session.userId) {
+            return res.status(401).json({ 
+                success: false, 
+                error: "You must be logged in to book a ride" 
+            });
+        }
+        
+        const rideId = parseInt(req.params.rideId);
+        const passengerId = req.session.userId;
+        
+        // Use matching service to create the booking
+        const result = await matchingService.matchPassengerToRide(passengerId, rideId);
+        
+        if (result.success) {
+            return res.status(200).json({ 
+                success: true, 
+                message: "Ride booked successfully!",
+                bookingId: result.bookingId
+            });
+        } else {
+            return res.status(400).json({ 
+                success: false, 
+                error: result.error 
+            });
+        }
+    } catch (err) {
+        console.error("Error booking ride:", err);
+        return res.status(500).json({ 
+            success: false, 
+            error: "An error occurred while booking the ride: " + err.message 
+        });
     }
 });
 

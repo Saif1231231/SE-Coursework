@@ -64,11 +64,50 @@ router.get('/transport', async (req, res) => {
                     AND pickup_location LIKE ? 
                     AND dropoff_location LIKE ?
                 `, [req.session.userId, `%${whereFrom}%`, `%${whereTo}%`]);
+                
+                // Get location and weather data if both locations are provided
+                try {
+                    const externalApiService = require('../services/external-apis');
+                    
+                    // Fetch data in parallel for better performance
+                    const [pickupGeocode, dropoffGeocode, weatherData] = await Promise.all([
+                        externalApiService.geocodeAddress(whereFrom),
+                        externalApiService.geocodeAddress(whereTo),
+                        externalApiService.getWeatherForecast(whereFrom)
+                    ]);
+                    
+                    // If both geocodes are valid, calculate the distance
+                    let distanceData = null;
+                    if (pickupGeocode && pickupGeocode.coordinates && 
+                        dropoffGeocode && dropoffGeocode.coordinates) {
+                        
+                        distanceData = await externalApiService.calculateDistance(
+                            pickupGeocode.coordinates,
+                            dropoffGeocode.coordinates
+                        );
+                    }
+                    
+                    // Include the API data in the response
+                    return res.render('student/transport', {
+                        rides, 
+                        searchQuery: { whereFrom, whereTo },
+                        locationData: {
+                            pickup: pickupGeocode ? JSON.parse(JSON.stringify(pickupGeocode)) : null,
+                            dropoff: dropoffGeocode ? JSON.parse(JSON.stringify(dropoffGeocode)) : null,
+                            distance: distanceData ? JSON.parse(JSON.stringify(distanceData)) : null
+                        },
+                        weatherData: weatherData ? JSON.parse(JSON.stringify(weatherData)) : null
+                    });
+                } catch (apiError) {
+                    console.warn('Could not fetch external API data:', apiError);
+                    // Continue with the normal response if API calls fail
+                }
             } catch (err) {
                 console.log('No matching favorite found or error updating last_used:', err);
             }
         }
         
+        // Default response without API data
         res.render('student/transport', { 
             rides, 
             searchQuery: { whereFrom, whereTo } 
@@ -83,6 +122,8 @@ router.get('/transport', async (req, res) => {
 router.post('/transport/search', async (req, res) => {
     try {
         const { whereFrom, whereTo } = req.body;
+        
+        // Get basic rides data
         const [rides] = await db.query(`
             SELECT 
                 r.ride_id,
@@ -121,11 +162,52 @@ router.post('/transport/search', async (req, res) => {
                         WHERE id = ?
                     `, [favorites[0].id]);
                 }
+                
+                // Get location and weather data if both locations are provided
+                if (whereFrom && whereTo) {
+                    try {
+                        const externalApiService = require('../services/external-apis');
+                        
+                        // Fetch data in parallel for better performance
+                        const [pickupGeocode, dropoffGeocode, weatherData] = await Promise.all([
+                            externalApiService.geocodeAddress(whereFrom),
+                            externalApiService.geocodeAddress(whereTo),
+                            externalApiService.getWeatherForecast(whereFrom)
+                        ]);
+                        
+                        // If both geocodes are valid, calculate the distance
+                        let distanceData = null;
+                        if (pickupGeocode && pickupGeocode.coordinates && 
+                            dropoffGeocode && dropoffGeocode.coordinates) {
+                            
+                            distanceData = await externalApiService.calculateDistance(
+                                pickupGeocode.coordinates,
+                                dropoffGeocode.coordinates
+                            );
+                        }
+                        
+                        // Include the API data in the response
+                        return res.render('student/transport', {
+                            rides,
+                            searchQuery: { whereFrom, whereTo },
+                            locationData: {
+                                pickup: pickupGeocode ? JSON.parse(JSON.stringify(pickupGeocode)) : null,
+                                dropoff: dropoffGeocode ? JSON.parse(JSON.stringify(dropoffGeocode)) : null,
+                                distance: distanceData ? JSON.parse(JSON.stringify(distanceData)) : null
+                            },
+                            weatherData: weatherData ? JSON.parse(JSON.stringify(weatherData)) : null
+                        });
+                    } catch (apiError) {
+                        console.warn('Could not fetch external API data:', apiError);
+                        // Continue with the normal response if API calls fail
+                    }
+                }
             } catch (err) {
                 console.log('Error checking favorite status:', err);
             }
         }
         
+        // Default response without API data
         res.render('student/transport', { rides, searchQuery: { whereFrom, whereTo } });
     } catch (err) {
         console.error('Error searching rides:', err);

@@ -31,6 +31,9 @@ app.use((req, res, next) => {
 // ✅ Import Database Connection
 const db = require("../services/db");
 
+// Import Services
+const externalApiService = require('../services/external-apis');
+
 // ✅ Import Routes
 const ridesRoutes = require("../routes/rides");
 const reviewsRoutes = require("../routes/reviews");
@@ -77,6 +80,38 @@ app.get("/", (req, res) => {
             name: req.session.name,
             type: req.session.userType
         } : null
+    });
+});
+
+// API Usage Dashboard Route (admin only)
+app.get("/api-dashboard", (req, res) => {
+    // In a real app, we would check if the user is an admin
+    if (!req.session.userId || req.session.userType !== 'admin') {
+        return res.redirect('/auth/login');
+    }
+    
+    // Mock usage statistics for demo purposes
+    // In a real app, we would get this from a database
+    const usageStats = {
+        totalCalls: 124,
+        weatherApiCalls: 53,
+        geocodingApiCalls: 47,
+        distanceApiCalls: 24,
+        averageResponseTime: 180, // ms
+        successRate: 96.8, // percentage
+        lastHourCalls: 12,
+        peakHour: '15:00-16:00',
+        callsByService: {
+            'weather': [5, 8, 15, 12, 8, 5],
+            'geocoding': [3, 6, 12, 10, 9, 7],
+            'distance': [2, 4, 8, 6, 3, 1]
+        },
+        timeLabels: ['9:00', '10:00', '11:00', '12:00', '13:00', '14:00']
+    };
+    
+    res.render("api-dashboard", {
+        title: "API Usage Dashboard",
+        usageStats
     });
 });
 

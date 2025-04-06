@@ -1,0 +1,346 @@
+extends layout
+
+block content
+  .container.py-5
+    h1.mb-4 Smart Ride Matching
+    p.lead Find your perfect ride match using our advanced algorithm that considers your preferences and history.
+    
+    if errorMessage
+      .alert.alert-danger.alert-dismissible.fade.show(role='alert')
+        strong Error: 
+        = errorMessage
+        button.btn-close(type='button', data-bs-dismiss='alert', aria-label='Close')
+    
+    if successMessage
+      .alert.alert-info.alert-dismissible.fade.show(role='alert')
+        = successMessage
+        button.btn-close(type='button', data-bs-dismiss='alert', aria-label='Close')
+    
+    // Display Weather Information if available
+    if weatherData && weatherData.current
+      .card.shadow.mb-4
+        .card-header.bg-info.text-white
+          i.bi.bi-cloud.me-2
+          | Current Weather at #{weatherData.location}
+        .card-body
+          .row
+            .col-md-4.text-center
+              h3 #{weatherData.current.temp}°C
+              p.mb-0 #{weatherData.current.conditions}
+            .col-md-4.text-center.border-start.border-end
+              p.mb-0
+                i.bi.bi-wind.me-2
+                | Wind: #{weatherData.current.wind_speed} km/h
+              p.mb-0
+                i.bi.bi-droplet.me-2
+                | Precipitation: #{weatherData.current.precipitation_chance}%
+            .col-md-4.text-center
+              if weatherData.current.is_rainy
+                p.text-warning
+                  i.bi.bi-umbrella.me-2
+                  | Rain expected - consider covered transport
+              else
+                p.text-success
+                  i.bi.bi-sun.me-2
+                  | Good weather for all transport options
+    
+    // Display Distance Information if available
+    if locationData && locationData.distance
+      .card.shadow.mb-4
+        .card-header.bg-secondary.text-white
+          i.bi.bi-map.me-2
+          | Route Information
+        .card-body
+          .row
+            .col-md-4.text-center
+              h4 Distance
+              p.lead.mb-0 #{locationData.distance.distance.text}
+            .col-md-4.text-center.border-start.border-end
+              h4 Estimated Travel Time
+              p.lead.mb-0 #{locationData.distance.duration.text}
+            .col-md-4.text-center
+              h4 Locations
+              p.mb-0 From: #{locationData.pickup.formatted_address || searchParams.pickupLocation}
+              p.mb-0 To: #{locationData.dropoff.formatted_address || searchParams.dropoffLocation}
+    
+    .card.shadow.mb-5
+      .card-body
+        form(action='/rides/smart-match', method='get')
+          .row.mb-3
+            .col-md-6
+              label.form-label(for='pickupLocation') From
+              .input-group
+                span.input-group-text
+                  i.bi.bi-geo-alt
+                input.form-control#pickupLocation(
+                  type='text', 
+                  name='pickupLocation', 
+                  placeholder='Enter pickup location',
+                  value=searchParams ? searchParams.pickupLocation : ''
+                )
+            .col-md-6
+              label.form-label(for='dropoffLocation') To
+              .input-group
+                span.input-group-text
+                  i.bi.bi-geo-alt-fill
+                input.form-control#dropoffLocation(
+                  type='text', 
+                  name='dropoffLocation', 
+                  placeholder='Enter destination',
+                  value=searchParams ? searchParams.dropoffLocation : ''
+                )
+          
+          .row.mb-3
+            .col-md-6
+              label.form-label(for='departureTime') When
+              .input-group
+                span.input-group-text
+                  i.bi.bi-calendar-event
+                input.form-control#departureTime(
+                  type='datetime-local', 
+                  name='departureTime',
+                  value=searchParams ? searchParams.departureTime : ''
+                )
+            .col-md-6
+              label.form-label(for='maxPrice') Max Price (£)
+              .input-group
+                span.input-group-text £
+                input.form-control#maxPrice(
+                  type='number', 
+                  name='maxPrice', 
+                  placeholder='Enter maximum price',
+                  min='0',
+                  step='0.01',
+                  value=searchParams ? searchParams.maxPrice : ''
+                )
+          
+          // Advanced Options (collapsible)
+          .mb-3
+            a.btn.btn-sm.btn-outline-secondary.mb-2(
+              data-bs-toggle='collapse', 
+              href='#advancedOptions', 
+              role='button',
+              aria-expanded=searchParams && (searchParams.minDriverRating || searchParams.preferFemaleDriver || searchParams.needsAccessibility || searchParams.preferredVehicleType || searchParams.avoidHighways || searchParams.considerWeather) ? 'true' : 'false',
+              aria-controls='advancedOptions'
+            )
+              i.bi.bi-sliders.me-1
+              | Advanced Options
+              
+            #advancedOptions.collapse(class=searchParams && (searchParams.minDriverRating || searchParams.preferFemaleDriver || searchParams.needsAccessibility || searchParams.preferredVehicleType || searchParams.avoidHighways || searchParams.considerWeather) ? 'show' : '')
+              .card.card-body.bg-light
+                h6.mb-3.text-primary Driver & Vehicle Preferences
+                .row
+                  .col-md-6
+                    label.form-label(for='minDriverRating') Minimum Driver Rating
+                    select.form-select#minDriverRating(name='minDriverRating')
+                      option(value='', selected=!searchParams || !searchParams.minDriverRating) Any rating
+                      option(value='3', selected=searchParams && searchParams.minDriverRating === '3') 3+ stars
+                      option(value='4', selected=searchParams && searchParams.minDriverRating === '4') 4+ stars
+                      option(value='4.5', selected=searchParams && searchParams.minDriverRating === '4.5') 4.5+ stars
+                  
+                  .col-md-6
+                    label.form-label(for='preferredVehicleType') Preferred Vehicle Type
+                    select.form-select#preferredVehicleType(name='preferredVehicleType')
+                      option(value='', selected=!searchParams || !searchParams.preferredVehicleType) Any vehicle
+                      option(value='car', selected=searchParams && searchParams.preferredVehicleType === 'car') Car
+                      option(value='suv', selected=searchParams && searchParams.preferredVehicleType === 'suv') SUV
+                      option(value='van', selected=searchParams && searchParams.preferredVehicleType === 'van') Van
+                
+                .row.mt-2
+                  .col-md-6
+                    .form-check.form-switch
+                      input.form-check-input#preferFemaleDriver(
+                        type='checkbox', 
+                        name='preferFemaleDriver', 
+                        value='true',
+                        checked=searchParams && searchParams.preferFemaleDriver === 'true'
+                      )
+                      label.form-check-label(for='preferFemaleDriver') Prefer female drivers
+                  
+                  .col-md-6
+                    .form-check.form-switch
+                      input.form-check-input#needsAccessibility(
+                        type='checkbox', 
+                        name='needsAccessibility', 
+                        value='true',
+                        checked=searchParams && searchParams.needsAccessibility === 'true'
+                      )
+                      label.form-check-label(for='needsAccessibility') Need accessible vehicle
+                
+                h6.mb-3.mt-4.text-primary Route & Environmental Preferences
+                .row.mt-2
+                  .col-md-6
+                    .form-check.form-switch
+                      input.form-check-input#avoidHighways(
+                        type='checkbox', 
+                        name='avoidHighways', 
+                        value='true',
+                        checked=searchParams && searchParams.avoidHighways === 'true'
+                      )
+                      label.form-check-label(for='avoidHighways') Prefer avoiding highways
+                  
+                  .col-md-6
+                    .form-check.form-switch
+                      input.form-check-input#considerWeather(
+                        type='checkbox', 
+                        name='considerWeather', 
+                        value='true',
+                        checked=searchParams && searchParams.considerWeather !== 'false'
+                      )
+                      label.form-check-label(for='considerWeather') Consider weather conditions
+          
+          .text-center.mt-4
+            button.btn.btn-primary.btn-lg(type='submit')
+              i.bi.bi-lightning-charge.me-2
+              | Find Matching Rides
+    
+    if rides && rides.length > 0
+      h2.mb-4 Matching Rides
+      
+      .row
+        each ride in rides
+          .col-md-6.col-lg-4.mb-4
+            .card.h-100.shadow-sm.ride-card(class=ride.match_score && ride.match_score >= 80 ? 'border-success' : '')
+              if ride.match_score
+                .progress.rounded-0(style='height: 4px;')
+                  .progress-bar.bg-success(
+                    role='progressbar', 
+                    style=`width: ${ride.match_score}%`, 
+                    aria-valuenow=ride.match_score, 
+                    aria-valuemin='0', 
+                    aria-valuemax='100'
+                  )
+              
+              .card-header.bg-primary.text-white.d-flex.justify-content-between
+                h5.mb-0= ride.pickup_location + ' to ' + ride.dropoff_location
+                span.badge.bg-light.text-dark £#{ride.fare}
+              
+              if ride.match_score
+                .small.px-3.py-1.bg-light.text-center.border-bottom
+                  if ride.match_score >= 90
+                    span.text-success
+                      i.bi.bi-stars.me-1
+                      | Perfect Match (#{ride.match_score}%)
+                  else if ride.match_score >= 80
+                    span.text-success
+                      i.bi.bi-star-fill.me-1
+                      | Great Match (#{ride.match_score}%)
+                  else if ride.match_score >= 70
+                    span.text-primary
+                      i.bi.bi-star-half.me-1
+                      | Good Match (#{ride.match_score}%)
+                  else
+                    span
+                      i.bi.bi-star.me-1
+                      | Match Score: #{ride.match_score}%
+              
+              .card-body
+                p.card-text
+                  strong Departure: 
+                  = new Date(ride.departureTime).toLocaleString()
+                
+                if ride.driver_name
+                  p.card-text
+                    strong Driver: 
+                    = ride.driver_name
+                    if ride.driver_rating
+                      |  
+                      span.badge.bg-warning.text-dark
+                        i.bi.bi-star-fill.me-1
+                        = ride.driver_rating
+                
+                p.card-text
+                  strong Available Seats: 
+                  = ride.seatsAvailable
+                
+                // Display weather/distance-specific information from ride
+                if ride.weather_info || ride.distance_info
+                  hr
+                  .row
+                    if ride.weather_info
+                      .col-md-6
+                        small.text-muted Weather at pickup:
+                        p.mb-0.small #{ride.weather_info.temp}°C, #{ride.weather_info.conditions}
+                    
+                    if ride.distance_info
+                      .col-md-6
+                        small.text-muted Travel details:
+                        p.mb-0.small #{ride.distance_info.distance}, #{ride.distance_info.duration}
+                
+                if ride.match_factors && ride.match_factors.length > 0
+                  .mt-2
+                    small.text-muted Why this match:
+                    .d-flex.flex-wrap.gap-1.mt-1
+                      each factor in ride.match_factors.slice(0, 3)
+                        span.badge.bg-info.text-white= factor
+                      if ride.match_factors.length > 3
+                        span.badge.bg-secondary.text-white +#{ride.match_factors.length - 3} more
+              
+              .card-footer.d-flex.justify-content-between.align-items-center
+                small.text-muted Ride ID: #{ride.ride_id}
+                button.btn.btn-success.book-ride(data-ride-id=ride.ride_id) Book Now
+
+    else if rides
+      .alert.alert-info
+        h3.text-center No matching rides found
+        p.text-center Try adjusting your search criteria or check back later for more ride options.
+        
+        if useAdvancedMatching
+          p.text-center.font-italic Our advanced matching couldn't find rides matching your criteria. Try broadening your search parameters.
+
+block scripts
+  script.
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set default date/time if not provided
+      const datetimeInput = document.getElementById('departureTime');
+      if (!datetimeInput.value) {
+        const now = new Date();
+        const twoDigits = num => num.toString().padStart(2, '0');
+        const dateString = `${now.getFullYear()}-${twoDigits(now.getMonth()+1)}-${twoDigits(now.getDate())}T${twoDigits(now.getHours())}:${twoDigits(now.getMinutes())}`;
+        datetimeInput.value = dateString;
+      }
+      
+      // Handle booking buttons
+      const bookButtons = document.querySelectorAll('.book-ride');
+      bookButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          const rideId = this.getAttribute('data-ride-id');
+          
+          // Confirm booking
+          if (confirm('Are you sure you want to book this ride?')) {
+            fetch(`/rides/book/${rideId}`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                alert('Booking successful! Your booking ID is: ' + data.bookingId);
+                window.location.href = '/profile'; // Redirect to profile page
+              } else {
+                alert('Error: ' + data.error);
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              alert('An error occurred while booking the ride. Please try again.');
+            });
+          }
+        });
+      });
+      
+      // Display extended match factors on hover/click
+      document.querySelectorAll('.badge.bg-secondary').forEach(badge => {
+        const card = badge.closest('.card');
+        const rideFactor = card.querySelector('.match-factors-extended');
+        
+        if (rideFactor) {
+          badge.addEventListener('click', function() {
+            rideFactor.classList.toggle('d-none');
+          });
+        }
+      });
+    }); 
