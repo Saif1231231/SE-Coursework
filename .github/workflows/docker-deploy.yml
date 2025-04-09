@@ -3,6 +3,11 @@ name: Docker Build and Deploy
 on:
   push:
     branches: [ master ]
+
+# Add permissions to allow package publishing
+permissions:
+  contents: read
+  packages: write
     
 jobs:
   build:

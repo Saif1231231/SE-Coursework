@@ -44,5 +44,29 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
+    - name: Install ESLint
+      run: npm install eslint --save-dev
+      
+    - name: Create ESLint config if it doesn't exist
+      run: |
+        if [ ! -f .eslintrc.js ]; then
+          echo "module.exports = {
+            env: {
+              node: true,
+              browser: true,
+              es6: true,
+              jest: true,
+            },
+            extends: 'eslint:recommended',
+            parserOptions: {
+              ecmaVersion: 2020,
+            },
+            rules: {
+              'no-unused-vars': 'warn',
+              'no-console': 'off',
+            },
+          };" > .eslintrc.js
+        fi
+    
     - name: Lint code
       run: npx eslint . --ext .js 
