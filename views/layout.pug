@@ -162,14 +162,6 @@ html
                 a.nav-link(href="/student/favorites") 
                   i.bi.bi-bookmark-star.me-1
                   | Saved Routes
-              li.nav-item
-                a.nav-link(href="/rides/smart-match")
-                  i.bi.bi-lightning-charge.me-1
-                  | Smart Match
-              li.nav-item
-                a.nav-link(href="/reports")
-                  i.bi.bi-exclamation-circle.me-1
-                  | Report Driver
             else if session && session.userType === 'driver'
               li.nav-item
                 a.nav-link(href="/driver") Driver Dashboard
@@ -204,14 +196,6 @@ html
                       a.dropdown-item(href="/student/bookings") My Bookings
                     li
                       a.dropdown-item(href="/student/favorites") Saved Routes
-                    li
-                      a.dropdown-item(href="/rides/smart-match")
-                        i.bi.bi-lightning-charge.me-1
-                        | Smart Ride Matching
-                    li
-                      a.dropdown-item(href="/reports")
-                        i.bi.bi-exclamation-circle.me-1
-                        | Report Driver
                   else if session.userType === 'driver'
                     li
                       a.dropdown-item(href="/driver") Dashboard
