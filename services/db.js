@@ -4,8 +4,9 @@ const mysql = require("mysql2/promise");
 // Enhanced Database Configuration with flexible environments
 const config = {
   db: {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '3306'),
+    // Use Docker-specific settings when in Docker environment
+    host: process.env.NODE_ENV === 'docker' ? (process.env.DOCKER_DB_HOST || 'db') : (process.env.DB_HOST || 'localhost'),
+    port: parseInt(process.env.NODE_ENV === 'docker' ? (process.env.DOCKER_DB_PORT || '3306') : (process.env.DB_PORT || '3306')),
     user: process.env.DB_USER || "root",
     password: process.env.DB_PASSWORD || "newpassword",
     database: process.env.DB_NAME || "ridesharing",

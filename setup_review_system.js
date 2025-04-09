@@ -10,10 +10,10 @@ async function setupReviewSystem() {
   const sqlFilePath = path.join(__dirname, 'advanced_reviews.sql');
   const sqlContent = fs.readFileSync(sqlFilePath, 'utf8');
   
-  // Create a connection
+  // Create a connection with Docker-aware configuration
   const connection = await mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '3306'),
+    host: process.env.NODE_ENV === 'docker' ? (process.env.DOCKER_DB_HOST || 'db') : (process.env.DB_HOST || 'localhost'),
+    port: parseInt(process.env.NODE_ENV === 'docker' ? (process.env.DOCKER_DB_PORT || '3306') : (process.env.DB_PORT || '3306')),
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || 'newpassword',
     multipleStatements: true // Enable multiple statements for running the SQL file
@@ -36,8 +36,5 @@ async function setupReviewSystem() {
   }
 }
 
-// Run the script
-setupReviewSystem().catch(err => {
-  console.error('Unhandled error:', err);
-  process.exit(1);
-}); 
+// Call the function
+setupReviewSystem(); 
