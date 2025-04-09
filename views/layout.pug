@@ -167,10 +167,6 @@ html
                 a.nav-link(href="/driver") Driver Dashboard
               li.nav-item
                 a.nav-link(href="/driver/rides/create") Offer a Ride
-              li.nav-item
-                a.nav-link(href="/reports")
-                  i.bi.bi-exclamation-triangle-fill.me-1
-                  | My Reports
             else if session && session.userType === 'admin'
               li.nav-item
                 a.nav-link(href="/admin") Admin Dashboard
@@ -201,10 +197,6 @@ html
                       a.dropdown-item(href="/driver") Dashboard
                     li
                       a.dropdown-item(href="/driver/rides/create") Offer a Ride
-                    li
-                      a.dropdown-item(href="/reports")
-                        i.bi.bi-exclamation-triangle-fill.me-1
-                        | My Reports
                   else if session.userType === 'admin'
                     li
                       a.dropdown-item(href="/admin") Dashboard
