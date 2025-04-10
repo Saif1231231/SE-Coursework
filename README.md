@@ -139,4 +139,27 @@ UniShared is a ridesharing platform designed for university students and drivers
 
 3. **Changes Not Appearing**:
    - Clear browser cache
-   - Restart the application: `docker-compose restart web` 
+   - Restart the application: `docker-compose restart web`
+  
+
+1. **User Authentication**
+   - Login for students, drivers, and admins
+   - Session management
+
+2. **Student Features**
+   - Browse available rides
+   - Search for rides by location
+   - Book rides
+   - View and manage bookings
+   - User profile management
+
+3. **Driver Features**
+   - Create and offer rides
+   - Manage ride details and availability
+   - View passenger bookings
+   - Profile management
+
+4. **Profile Management**
+   - View and edit profile information
+   - Upload profile pictures
+   - View ride history
