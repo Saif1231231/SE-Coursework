@@ -1,6 +1,6 @@
 # UniShared - Ridesharing Platform
 
-UniShared is a ridesharing platform designed for university students and drivers. It allows students to find, book, and manage rides, while drivers can offer rides and manage their schedules.
+UniShared is a ridesharing platform designed for university students and drivers. It allows students to find, book, and manage rides, while drivers can offer rides and manage their databse schedueles 
 
 ## Quick Start Guide
 
@@ -19,7 +19,7 @@ UniShared is a ridesharing platform designed for university students and drivers
 
 3. **Access the website:**
    - Main application: [http://localhost:3002](http://localhost:3002)
-   - phpMyAdmin: [http://localhost:8082](http://localhost:8082)
+   - phpMyAdmin: [http://localhost:8080](http://localhost:8080)
      - Username: `root`
      - Password: `newpassword`
 
@@ -38,7 +38,7 @@ UniShared is a ridesharing platform designed for university students and drivers
    ```
    docker-compose down
    docker-compose build --no-cache
-   docker-compose up -d
+   docker-compose up 
    ```
 
 ## Project Structure
