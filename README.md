@@ -120,4 +120,23 @@ UniShared is a ridesharing platform designed for university students and drivers
 
 3. **Changes Not Appearing**:
    - Clear browser cache
+
+   - Restart the application: `docker-compose restart web` 
+
+
+
+
+
+## Troubleshooting
+
+1. **Database Connection Issues**:
+   - Check the `.env` file to ensure database credentials are correct
+   - Ensure the database container is running: `docker ps`
+
+2. **Application Not Starting**:
+   - Check logs: `docker-compose logs web`
+   - Verify ports are not in use by other applications
+
+3. **Changes Not Appearing**:
+   - Clear browser cache
    - Restart the application: `docker-compose restart web` 
