@@ -168,4 +168,258 @@ router.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
+// Show Registration Form
+router.get('/register', (req, res) => {
+    const userType = req.query.userType || 'student';
+    const message = req.query.message || '';
+    const status = req.query.status || '';
+    const formData = req.query.formData ? JSON.parse(req.query.formData) : null;
+    
+    res.render('auth/register', { 
+        userType, 
+        message, 
+        status,
+        formData
+    });
+});
+
+// Handle Registration
+router.post('/register', async (req, res) => {
+    try {
+        console.log('🟢 Registration process started');
+        console.log('Request body:', req.body);
+        
+        const { name, email, phone, password, confirmPassword, userType, licenseNumber, vehicleDetails } = req.body;
+        
+        console.log('🟢 Registration attempt:', { name, email, phone, userType });
+        
+        // Basic validation
+        if (!name || !email || !phone || !password || !confirmPassword || !userType) {
+            console.log('🔴 Missing required fields');
+            return res.render('auth/register', {
+                userType: userType || 'student',
+                message: 'All required fields must be filled',
+                status: 'error',
+                formData: req.body
+            });
+        }
+        
+        if (password !== confirmPassword) {
+            console.log('🔴 Password mismatch');
+            return res.render('auth/register', {
+                userType,
+                message: 'Passwords do not match',
+                status: 'error',
+                formData: req.body
+            });
+        }
+
+        if (password.length < 6) {
+            console.log('🔴 Password too short');
+            return res.render('auth/register', {
+                userType,
+                message: 'Password must be at least 6 characters',
+                status: 'error',
+                formData: req.body
+            });
+        }
+
+        // Check if email already exists
+        let tableName = userType === 'driver' ? 'driver' : 'passenger';
+        console.log('🟢 Checking for existing user in table:', tableName);
+        
+        try {
+            const [existingUsers] = await db.query(`SELECT * FROM ${tableName} WHERE email = ?`, [email]);
+            console.log('🟢 Email check result:', existingUsers.length > 0 ? 'Email exists' : 'Email available');
+            
+            if (existingUsers.length > 0) {
+                console.log('🔴 Email already exists:', email);
+                return res.render('auth/register', {
+                    userType,
+                    message: 'Email already registered',
+                    status: 'error',
+                    formData: req.body
+                });
+            }
+        } catch (dbErr) {
+            console.error('🔴 Database error checking existing email:', dbErr);
+            throw dbErr;
+        }
+
+        // Hash password
+        console.log('🟢 Hashing password...');
+        const hashedPassword = await bcrypt.hash(password, 10);
+        console.log('🟢 Password hashed successfully');
+
+        // Insert user into appropriate table
+        if (userType === 'driver') {
+            console.log('🟢 Inserting driver...');
+            if (!licenseNumber) {
+                console.log('🔴 License number required for driver');
+                return res.render('auth/register', {
+                    userType,
+                    message: 'License number is required for drivers',
+                    status: 'error',
+                    formData: req.body
+                });
+            }
+            
+            try {
+                const [result] = await db.query(
+                    `INSERT INTO driver (name, email, phone, password_hash, license_number, vehicle_details, verified, suspended) 
+                     VALUES (?, ?, ?, ?, ?, ?, 0, 0)`,
+                    [name, email, phone, hashedPassword, licenseNumber, vehicleDetails || '']
+                );
+                console.log('🟢 Driver insert result:', result);
+            } catch (insertErr) {
+                console.error('🔴 Error inserting driver:', insertErr);
+                throw insertErr;
+            }
+        } else {
+            console.log('🟢 Inserting passenger...');
+            try {
+                const [result] = await db.query(
+                    `INSERT INTO passenger (name, email, phone, password_hash, verified, suspended) 
+                     VALUES (?, ?, ?, ?, 0, 0)`,
+                    [name, email, phone, hashedPassword]
+                );
+                console.log('🟢 Passenger insert result:', result);
+            } catch (insertErr) {
+                console.error('🔴 Error inserting passenger:', insertErr);
+                throw insertErr;
+            }
+        }
+
+        console.log('🟢 Registration successful for:', email);
+        
+        // Verify the user was actually inserted
+        try {
+            const [checkUser] = await db.query(`SELECT * FROM ${tableName} WHERE email = ?`, [email]);
+            console.log('🟢 Verification after insert:', checkUser.length > 0 ? 'User found' : 'User not found');
+            
+            if (checkUser.length === 0) {
+                console.log('🔴 Warning: User not found after insert');
+            }
+        } catch (verifyErr) {
+            console.error('🔴 Error verifying user after insert:', verifyErr);
+            // Continue despite this error
+        }
+        
+        // Redirect to success page
+        return res.render('auth/registration-success', {
+            userType,
+            email
+        });
+    } catch (err) {
+        console.error('🔴 Registration error:', err);
+        return res.render('auth/register', {
+            userType: req.body?.userType || 'student',
+            message: 'An error occurred during registration: ' + err.message,
+            status: 'error',
+            formData: req.body
+        });
+    }
+});
+
+// Test database connection and table existence
+router.get('/test-db', async (req, res) => {
+    try {
+        // Test database connection
+        const [testResult] = await db.query('SELECT 1 as test');
+        console.log('Database connection test:', testResult);
+
+        // Check if passenger table exists
+        const [tables] = await db.query(`
+            SELECT TABLE_NAME 
+            FROM information_schema.tables 
+            WHERE table_schema = DATABASE() 
+            AND table_name = 'passenger'
+        `);
+        
+        console.log('Passenger table check:', tables);
+
+        // If table exists, show some sample data
+        if (tables.length > 0) {
+            const [passengers] = await db.query('SELECT * FROM passenger LIMIT 5');
+            console.log('Sample passenger data:', passengers);
+        }
+
+        res.json({
+            connection: 'success',
+            passengerTableExists: tables.length > 0,
+            sampleData: tables.length > 0 ? await db.query('SELECT * FROM passenger LIMIT 5') : null
+        });
+    } catch (err) {
+        console.error('Database test error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Test direct insert into passenger table
+router.get('/test-insert', async (req, res) => {
+    try {
+        // Generate a unique test email
+        const testEmail = `test_${Date.now()}@example.com`;
+        
+        console.log('Attempting direct test insert with email:', testEmail);
+        
+        // First check if the database connection is working
+        const [connectionTest] = await db.query('SELECT 1 as test');
+        console.log('Database connection test:', connectionTest);
+        
+        // Try a simple direct insert with minimal fields
+        const insertSQL = `
+            INSERT INTO passenger (name, email, phone, password_hash, verified, suspended) 
+            VALUES (?, ?, ?, ?, 0, 0)
+        `;
+        
+        // Log the exact SQL and parameters
+        console.log('SQL:', insertSQL);
+        console.log('Parameters:', ['Test User', testEmail, '07000000000', 'test_password']);
+        
+        // Execute the insert
+        const [insertResult] = await db.query(
+            insertSQL,
+            ['Test User', testEmail, '07000000000', 'test_password']
+        );
+        
+        console.log('Insert result:', insertResult);
+        
+        // Verify the insert by querying the record
+        const [verifyResult] = await db.query(
+            'SELECT * FROM passenger WHERE email = ?',
+            [testEmail]
+        );
+        
+        console.log('Verification query result:', verifyResult);
+        
+        // Show detailed database info
+        const [dbInfo] = await db.query('SELECT DATABASE() as current_db');
+        
+        res.json({
+            status: 'success',
+            message: 'Test insert completed',
+            insertResult,
+            verifyResult,
+            databaseInfo: dbInfo
+        });
+    } catch (err) {
+        console.error('Test insert error:', err);
+        
+        // Get more detailed error information
+        let errorInfo = {
+            message: err.message,
+            code: err.code,
+            errno: err.errno,
+            sqlState: err.sqlState,
+            sqlMessage: err.sqlMessage
+        };
+        
+        res.status(500).json({ 
+            error: 'Test insert failed',
+            details: errorInfo
+        });
+    }
+});
+
 module.exports = router; 

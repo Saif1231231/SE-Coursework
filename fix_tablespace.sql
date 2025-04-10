@@ -1,0 +1,3 @@
+ALTER TABLE ridesharing.admin IMPORT TABLESPACE;
+ALTER TABLE ridesharing.booking IMPORT TABLESPACE;
+ALTER TABLE ridesharing.dispute IMPORT TABLESPACE;

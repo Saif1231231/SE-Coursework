@@ -1,29 +1,40 @@
 extends ../layout
 
 block content
-  h1.text-center Login to UniShared
+  div.container.mt-5
+    div.row.justify-content-center
+      div.col-md-6
+        div.card
+          div.card-header.bg-primary.text-white
+            h4.text-center.mb-0 Login to UniShared
+          
+          div.card-body
+            if message
+              div.alert.alert-danger= message
 
-  if message
-    div.alert.alert-danger= message
-
-  form.login-form(method="POST" action="/auth/login")
-    div.form-group
-      label(for="email") Email:
-      input.form-control(type="email" id="email" name="email" required)
-    
-    div.form-group
-      label(for="password") Password:
-      input.form-control(type="password" id="password" name="password" required)
-    
-    div.form-group
-      label(for="userType") Login as:
-      select.form-control(id="userType" name="userType" required)
-        option(value="" selected=!userType) Select user type
-        option(value="student" selected=userType==='student') Student
-        option(value="driver" selected=userType==='driver') Driver
-        option(value="admin" selected=userType==='admin') Admin
-    
-    button.btn.btn-primary.btn-block(type="submit") Login
-  
-  div.text-center.mt-3
-    a(href="/") Back to Home 
+            form.login-form(method="POST" action="/auth/login")
+              div.form-group.mb-3
+                label(for="email") Email:
+                input.form-control(type="email" id="email" name="email" required)
+              
+              div.form-group.mb-3
+                label(for="password") Password:
+                input.form-control(type="password" id="password" name="password" required)
+              
+              div.form-group.mb-3
+                label(for="userType") Login as:
+                select.form-control(id="userType" name="userType" required)
+                  option(value="" selected=!userType) Select user type
+                  option(value="student" selected=userType==='student') Student
+                  option(value="driver" selected=userType==='driver') Driver
+                  option(value="admin" selected=userType==='admin') Admin
+              
+              button.btn.btn-primary.btn-block.w-100(type="submit") Login
+            
+            div.text-center.mt-4
+              p.mb-2 Don't have an account?
+              div.d-grid.gap-2
+                a.btn.btn-outline-primary(href="/auth/register?userType=student") Register as Student
+                a.btn.btn-outline-primary(href="/auth/register?userType=driver") Register as Driver
+              div.mt-3
+                a(href="/") Back to Home 
